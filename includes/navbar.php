@@ -100,39 +100,39 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item">
-                    <a class="nav-link" href="/realestate/index.php"><i class="fa-solid fa-magnifying-glass me-1 small"></i> Browse</a>
+                    <a class="nav-link" href="../index.php"><i class="fa-solid fa-magnifying-glass me-1 small"></i> Browse</a>
                 </li>
 
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="/realestate/user/dashboard.php">Dashboard</a>
+                        <a class="nav-link" href="../user/dashboard.php">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/realestate/user/my_properties.php">My Properties</a>
+                        <a class="nav-link" href="../user/my_properties.php">My Properties</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/realestate/user/requests.php">Requests</a>
+                        <a class="nav-link" href="../user/requests.php">Requests</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/realestate/user/membership.php">Membership</a>
+                        <a class="nav-link" href="../user/membership.php">Membership</a>
                     </li>
                     <li class="nav-item ms-lg-3">
-                        <a class="nav-link btn-nav-action" href="/realestate/user/add_property.php">
+                        <a class="nav-link btn-nav-action" href="../user/add_property.php">
                             <i class="fa-solid fa-plus me-1"></i> Add Property
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link logout-link ms-lg-2" href="/realestate/auth/logout.php">
+                        <a class="nav-link logout-link ms-lg-2" href="../auth/logout.php">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                     </li>
 
                 <?php else: ?>
                     <li class="nav-item">
-                        <a class="nav-link btn-nav-outline" href="/realestate/auth/login.php">Login</a>
+                        <a class="nav-link btn-nav-outline" href="../auth/login.php">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn-nav-action" href="/realestate/auth/register.php">Register</a>
+                        <a class="nav-link btn-nav-action" href="../auth/register.php">Register</a>
                     </li>
                 <?php endif; ?>
             </ul>
