@@ -93,3 +93,90 @@ INSERT INTO admins (email, password)
 VALUES ('admin@gmail.com', '123456');
 
 ALTER TABLE users ADD status ENUM('active','blocked') DEFAULT 'active';
+
+===============================================================================================================================================================
+
+date = 8 april 
+
+
+ALTER TABLE users 
+ADD approval_status ENUM('pending','approved','rejected') DEFAULT 'pending';
+
+ALTER TABLE users 
+ADD business_name VARCHAR(255),
+ADD state VARCHAR(100),
+ADD district VARCHAR(100);
+
+ALTER TABLE users 
+MODIFY status ENUM('pending','active','blocked') DEFAULT 'pending';
+
+CREATE TABLE contact_views (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    property_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE contact_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT,
+    property_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE contact_requests 
+ADD status ENUM('pending','accepted','rejected') DEFAULT 'pending';
+
+
+date = 9 april 
+
+ALTER TABLE users 
+ADD category ENUM('builder','broker','agent','freelancer') DEFAULT 'agent';
+
+ALTER TABLE memberships 
+ADD category VARCHAR(50),
+ADD features TEXT;
+
+
+date = 10 april 
+
+ALTER TABLE properties 
+ADD category VARCHAR(50) AFTER title,
+ADD purpose ENUM('buy','sell','rent') AFTER category,
+ADD area DECIMAL(10,2) AFTER price,
+ADD area_unit ENUM('sqft','sqyd','acre') AFTER area;
+
+UPDATE properties 
+SET category = 'Flats', purpose = 'sell', area = 1000, area_unit='sqft'
+WHERE category IS NULL;
+
+ALTER TABLE properties 
+ADD address TEXT,
+ADD state VARCHAR(100),
+ADD pincode VARCHAR(10),
+ADD latitude DECIMAL(10,8),
+ADD longitude DECIMAL(11,8),
+ADD facing VARCHAR(20),
+ADD floor VARCHAR(20),
+ADD property_age VARCHAR(50),
+ADD amenities TEXT,
+ADD verification_status ENUM('pending','verified','rejected') DEFAULT 'pending',
+ADD rejection_reason TEXT;
+
+CREATE TABLE property_documents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    property_id INT,
+    document_type VARCHAR(50),
+    file_path VARCHAR(255),
+    status ENUM('pending','verified','rejected') DEFAULT 'pending',
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE property_media (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    property_id INT,
+    type ENUM('image','video','floorplan'),
+    file_path VARCHAR(255)
+);
+
+ALTER TABLE properties ADD COLUMN video VARCHAR(255) NULL;

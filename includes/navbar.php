@@ -2,6 +2,9 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Automatically define the root path
+$base_url = "https://" . $_SERVER['HTTP_HOST'] . "/realestate/";
 ?>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,17 +20,29 @@ if (session_status() === PHP_SESSION_NONE) {
     .navbar {
         background: var(--nav-bg);
         border-bottom: 1px solid #e2e8f0;
-        padding: 15px 0;
+        padding: 12px 0;
         transition: all 0.3s ease;
     }
 
     .navbar-brand {
-        font-weight: 800;
-        color: var(--slate-900) !important;
-        letter-spacing: -0.5px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        text-decoration: none;
+    }
+
+    .nav-logo-img {
+        height: 45px; /* Adjusted to make the 3D logo details visible */
+        width: auto;
+        object-fit: contain;
+    }
+
+    .brand-text {
+        font-weight: 800;
+        color: var(--slate-900);
+        letter-spacing: -0.5px;
+        font-size: 1.25rem;
+        text-transform: uppercase;
     }
 
     .nav-link {
@@ -53,6 +68,12 @@ if (session_status() === PHP_SESSION_NONE) {
         font-weight: 600;
         padding: 8px 20px !important;
         margin-left: 10px;
+        transition: 0.3s ease;
+    }
+
+    .btn-nav-action:hover {
+        background: var(--blue-600);
+        transform: translateY(-1px);
     }
 
     .btn-nav-outline {
@@ -80,17 +101,19 @@ if (session_status() === PHP_SESSION_NONE) {
             margin-left: 0;
             margin-top: 10px;
             text-align: center;
+            display: block;
+        }
+        .nav-logo-img {
+            height: 38px;
         }
     }
 </style>
 
-<nav class="navbar navbar-expand-lg sticky-top">
+<nav class="navbar navbar-expand-lg sticky-top">    
     <div class="container">
-        <a class="navbar-brand" href="/realestate/index.php">
-            <div style="background: var(--slate-900); color:white; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-house-chimney" style="font-size: 0.9rem;"></i>
-            </div>
-            PropertyPlus
+        <a class="navbar-brand" href="<?php echo $base_url; ?>index.php">
+            <img src="<?php echo $base_url; ?>assets/logo.png" alt="PropertyPlus Logo" class="nav-logo-img">
+            <span class="brand-text">PropertyPlus</span>
         </a>
 
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
@@ -100,44 +123,44 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item">
-                    <a class="nav-link" href="../index.php"><i class="fa-solid fa-magnifying-glass me-1 small"></i> Browse</a>
+                    <a class="nav-link" href="<?php echo $base_url; ?>index.php">
+                        <i class="fa-solid fa-magnifying-glass me-1 small"></i> Browse
+                    </a>
                 </li>
 
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="../user/dashboard.php">Dashboard</a>
+                        <a class="nav-link" href="<?php echo $base_url; ?>user/dashboard.php">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../user/my_properties.php">My Properties</a>
+                        <a class="nav-link" href="<?php echo $base_url; ?>user/my_properties.php">My Properties</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../user/requests.php">Requests</a>
+                        <a class="nav-link" href="<?php echo $base_url; ?>user/requests.php">Requests</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../user/membership.php">Membership</a>
+                        <a class="nav-link" href="<?php echo $base_url; ?>user/membership.php">Membership</a>
                     </li>
                     <li class="nav-item ms-lg-3">
-                        <a class="nav-link btn-nav-action" href="../user/add_property.php">
+                        <a class="nav-link btn-nav-action" href="<?php echo $base_url; ?>user/add_property.php">
                             <i class="fa-solid fa-plus me-1"></i> Add Property
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link logout-link ms-lg-2" href="../auth/logout.php">
+                        <a class="nav-link logout-link ms-lg-2" href="<?php echo $base_url; ?>auth/logout.php">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                     </li>
 
                 <?php else: ?>
                     <li class="nav-item">
-                        <a class="nav-link btn-nav-outline" href="../auth/login.php">Login</a>
+                        <a class="nav-link btn-nav-outline" href="<?php echo $base_url; ?>auth/login.php">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn-nav-action" href="../auth/register.php">Register</a>
+                        <a class="nav-link btn-nav-action" href="<?php echo $base_url; ?>auth/register.php">Register</a>
                     </li>
                 <?php endif; ?>
             </ul>
         </div>
     </div>
 </nav>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
