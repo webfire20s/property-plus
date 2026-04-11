@@ -1,6 +1,6 @@
 </main>
 
-<footer id="footer" class="footer light-background">
+<!-- <footer id="footer" class="footer light-background">
 
     <div class="container">
       <div class="row gy-3">
@@ -76,4 +76,4 @@
   <script src="<?php echo $base_url; ?>assets/js/main.js"></script>
 
 </body>
-</html>
+</html> -->
