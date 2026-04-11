@@ -42,179 +42,158 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | PropertyPlus</title>
+    <title>Partner Login | EstateAgency</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --brand-gold: #fbbf24;
-            --brand-blue: #2563eb;
-            --slate-50: #f8fafc;
-            --slate-100: #f1f5f9;
-            --slate-200: #e2e8f0;
-            --slate-400: #94a3b8;
-            --slate-900: #0f172a;
+            --theme-green: #2eca6a;
+            --theme-dark: #2b2b2b;
+            --bg-light: #f7f7f7;
         }
 
         body {
-            background-color: var(--slate-50);
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            font-family: 'Poppins', sans-serif;
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
-            /* Enhanced geometric background */
-            background-image: radial-gradient(var(--slate-200) 1px, transparent 1px);
-            background-size: 32px 32px;
+            background-image: radial-gradient(#d1d1d1 1px, transparent 1px);
+            background-size: 30px 30px;
         }
 
         .login-card {
             background: #ffffff;
-            border: 1px solid var(--slate-200);
-            border-radius: 32px;
-            padding: 48px;
+            border: 1px solid #ebebeb;
+            border-radius: 20px;
+            padding: 50px;
             width: 100%;
-            max-width: 440px;
-            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.08);
+            max-width: 450px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
             position: relative;
-            overflow: hidden;
         }
 
-        /* Subtle gold accent at the top of the card */
+        /* Top accent bar to match EstateAgency style */
         .login-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: var(--brand-gold);
+            height: 5px;
+            background: var(--theme-green);
+            border-radius: 20px 20px 0 0;
         }
 
         .brand-logo {
-            width: 64px;
-            height: 64px;
-            background: var(--slate-900);
-            color: var(--brand-gold);
-            border-radius: 18px;
+            width: 70px;
+            height: 70px;
+            background: var(--theme-dark);
+            color: var(--theme-green);
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px auto;
-            font-size: 1.8rem;
-            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+            margin: 0 auto 25px auto;
+            font-size: 2rem;
         }
 
         .login-title {
-            font-weight: 800;
-            color: var(--slate-900);
+            font-weight: 700;
+            color: #000;
             text-align: center;
-            margin-bottom: 8px;
-            letter-spacing: -1px;
-            font-size: 1.75rem;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
         }
 
         .login-subtitle {
-            color: var(--slate-400);
+            color: #888;
             text-align: center;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             margin-bottom: 35px;
-            font-weight: 500;
         }
 
         .form-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            color: var(--slate-900);
-            margin-bottom: 8px;
+            color: #555;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
         }
 
         .input-group {
-            background-color: var(--slate-50);
-            border: 1px solid var(--slate-200);
-            border-radius: 14px;
-            transition: all 0.2s ease;
+            border: 2px solid #f1f1f1;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: 0.3s;
         }
 
         .input-group:focus-within {
-            border-color: var(--brand-gold);
-            background-color: #fff;
-            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1);
+            border-color: var(--theme-green);
+            box-shadow: 0 0 10px rgba(46, 202, 106, 0.1);
         }
 
         .input-group-text {
-            background-color: transparent;
+            background: #fff;
             border: none;
-            color: var(--slate-400);
-            padding-left: 18px;
+            color: #aaa;
+            padding-left: 20px;
         }
 
         .form-control {
             border: none;
-            background-color: transparent;
-            padding: 14px 18px 14px 10px;
-            font-size: 1rem;
+            padding: 15px 15px 15px 10px;
+            font-size: 0.95rem;
             font-weight: 600;
-            color: var(--slate-900);
         }
 
         .form-control:focus {
             box-shadow: none;
-            background-color: transparent;
-        }
-
-        .form-control::placeholder {
-            color: var(--slate-400);
-            font-weight: 400;
+            background: transparent;
         }
 
         .btn-login {
-            background-color: var(--slate-900);
+            background-color: var(--theme-dark);
             color: white;
             border: none;
-            border-radius: 16px;
+            border-radius: 10px;
             padding: 16px;
             width: 100%;
-            font-weight: 800;
-            margin-top: 15px;
-            transition: all 0.3s ease;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-size: 0.9rem;
         }
 
         .btn-login:hover {
-            background-color: #1e293b;
+            background-color: var(--theme-green);
+            color: #fff;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.2);
-            color: var(--brand-gold);
+            box-shadow: 0 10px 20px rgba(46, 202, 106, 0.2);
         }
 
         .footer-link {
             text-align: center;
             margin-top: 30px;
-            font-size: 0.95rem;
-            color: var(--slate-400);
-            font-weight: 500;
+            font-size: 0.9rem;
+            color: #888;
         }
 
         .footer-link a {
-            color: var(--slate-900);
+            color: var(--theme-green);
             text-decoration: none;
             font-weight: 700;
-            border-bottom: 2px solid var(--brand-gold);
-            padding-bottom: 2px;
-            transition: all 0.2s;
+            transition: 0.2s;
         }
 
         .footer-link a:hover {
-            color: var(--brand-blue);
-            border-color: var(--brand-blue);
+            color: #000;
         }
     </style>
 </head>
@@ -222,26 +201,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="login-card">
     <div class="brand-logo">
-        <i class="fa-solid fa-house-chimney-user"></i>
+        <i class="fa-solid fa-house-lock"></i>
     </div>
     <h3 class="login-title">Partner Portal</h3>
-    <p class="login-subtitle">Sign in to manage your premium listings</p>
+    <p class="login-subtitle">Access your listing management dashboard</p>
 
     <form method="POST">
-        <div class="mb-3">
-            <label class="form-label">Phone Identity</label>
+        <div class="mb-4">
+            <label class="form-label">Phone Number</label>
             <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-phone-flip"></i></span>
-                <input name="phone" type="text" class="form-control" placeholder="Enter mobile number" required>
+                <span class="input-group-text"><i class="fa-solid fa-mobile-screen-button"></i></span>
+                <input name="phone" type="text" class="form-control" placeholder="9876543210" required>
             </div>
         </div>
 
         <div class="mb-4">
-            <div class="d-flex justify-content-between">
-                <label class="form-label">Security Key</label>
-            </div>
+            <label class="form-label">Security Key</label>
             <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
+                <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
                 <input name="password" type="password" class="form-control" placeholder="••••••••" required>
             </div>
         </div>
@@ -252,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </form>
     
     <div class="footer-link">
-        New to the platform? <a href="register.php">Get Started</a>
+        Not a partner yet? <a href="register.php">Create Account</a>
     </div>
 </div>
 

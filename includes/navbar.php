@@ -3,164 +3,87 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Automatically define the root path
-$base_url = "https://" . $_SERVER['HTTP_HOST'] . "/realestate/";
+// Automatic path detection for XAMPP vs cPanel
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+$host = $_SERVER['HTTP_HOST'];
+if ($host == 'localhost') {
+    $base_url = $protocol . "://" . $host . "/realestate/";
+} else {
+    $base_url = $protocol . "://" . $host . "/";
+}
 ?>
+<!DOCTYPE html>
+<html lang="en">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>PropertyPlus | Elite Real Estate</title>
+  
+  <link href="<?php echo $base_url; ?>assets/img/favicon.png" rel="icon">
+  <link href="<?php echo $base_url; ?>assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-<style>
-    :root {
-        --nav-bg: #ffffff;
-        --slate-900: #0f172a;
-        --blue-600: #2563eb;
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link href="<?php echo $base_url; ?>assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="<?php echo $base_url; ?>assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="<?php echo $base_url; ?>assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="<?php echo $base_url; ?>assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="<?php echo $base_url; ?>assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <link href="<?php echo $base_url; ?>assets/css/main.css" rel="stylesheet">
+
+  <style>
+    /* Custom style to integrate your Logo into the template's header */
+    .header .logo img { max-height: 40px; margin-right: 10px; }
+    .navmenu .btn-get-started {
+        background: var(--accent-color, #2eca6a);
+        padding: 8px 20px;
+        margin-left: 15px;
+        border-radius: 4px;
+        color: #fff !important;
     }
+    .logout-icon { color: #ef4444 !important; font-size: 1.2rem; }
+  </style>
+</head>
 
-    .navbar {
-        background: var(--nav-bg);
-        border-bottom: 1px solid #e2e8f0;
-        padding: 12px 0;
-        transition: all 0.3s ease;
-    }
+<body class="index-page">
 
-    .navbar-brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-    }
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-    .nav-logo-img {
-        height: 45px; /* Adjusted to make the 3D logo details visible */
-        width: auto;
-        object-fit: contain;
-    }
+      <a href="<?php echo $base_url; ?>index.php" class="logo d-flex align-items-center">
+        <img src="<?php echo $base_url; ?>assets/logo.png" alt="PropertyPlus">
+        <h1 class="sitename">Property<span>Plus</span></h1>
+      </a>
 
-    .brand-text {
-        font-weight: 800;
-        color: var(--slate-900);
-        letter-spacing: -0.5px;
-        font-size: 1.25rem;
-        text-transform: uppercase;
-    }
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="<?php echo $base_url; ?>index.php">Browse</a></li>
+          
+          <?php if(isset($_SESSION['user_id'])): ?>
+            <li><a href="<?php echo $base_url; ?>user/dashboard.php">Dashboard</a></li>
+            <li><a href="<?php echo $base_url; ?>user/my_properties.php">My Properties</a></li>
+            <li><a href="<?php echo $base_url; ?>user/requests.php">Requests</a></li>
+            <li><a href="<?php echo $base_url; ?>user/membership.php">Membership</a></li>
+            <li><a href="<?php echo $base_url; ?>user/add_property.php" class="btn-get-started">Add Property</a></li>
+            <li>
+                <a href="<?php echo $base_url; ?>auth/logout.php" class="logout-icon">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </li>
 
-    .nav-link {
-        color: #64748b !important;
-        font-weight: 600;
-        font-size: 0.95rem;
-        padding: 8px 16px !important;
-        transition: 0.2s;
-    }
+          <?php else: ?>
+            <li><a href="<?php echo $base_url; ?>auth/login.php">Login</a></li>
+            <li><a href="<?php echo $base_url; ?>auth/register.php" class="btn-get-started">Register</a></li>
+          <?php endif; ?>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
 
-    .nav-link:hover {
-        color: var(--slate-900) !important;
-    }
-
-    .nav-link.active-link {
-        color: var(--blue-600) !important;
-    }
-
-    .btn-nav-action {
-        background: var(--slate-900);
-        color: white !important;
-        border-radius: 10px;
-        font-weight: 600;
-        padding: 8px 20px !important;
-        margin-left: 10px;
-        transition: 0.3s ease;
-    }
-
-    .btn-nav-action:hover {
-        background: var(--blue-600);
-        transform: translateY(-1px);
-    }
-
-    .btn-nav-outline {
-        border: 1.5px solid var(--slate-900);
-        color: var(--slate-900) !important;
-        border-radius: 10px;
-        font-weight: 600;
-        padding: 8px 20px !important;
-    }
-
-    .logout-link {
-        color: #ef4444 !important;
-    }
-
-    /* Mobile adjustments */
-    @media (max-width: 991px) {
-        .navbar-collapse {
-            background: #fff;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-            margin-top: 15px;
-        }
-        .btn-nav-action, .btn-nav-outline {
-            margin-left: 0;
-            margin-top: 10px;
-            text-align: center;
-            display: block;
-        }
-        .nav-logo-img {
-            height: 38px;
-        }
-    }
-</style>
-
-<nav class="navbar navbar-expand-lg sticky-top">    
-    <div class="container">
-        <a class="navbar-brand" href="<?php echo $base_url; ?>index.php">
-            <img src="<?php echo $base_url; ?>assets/logo.png" alt="PropertyPlus Logo" class="nav-logo-img">
-            <span class="brand-text">PropertyPlus</span>
-        </a>
-
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-            <i class="fa-solid fa-bars-staggered"></i>
-        </button>
-
-        <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $base_url; ?>index.php">
-                        <i class="fa-solid fa-magnifying-glass me-1 small"></i> Browse
-                    </a>
-                </li>
-
-                <?php if(isset($_SESSION['user_id'])): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $base_url; ?>user/dashboard.php">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $base_url; ?>user/my_properties.php">My Properties</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $base_url; ?>user/requests.php">Requests</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $base_url; ?>user/membership.php">Membership</a>
-                    </li>
-                    <li class="nav-item ms-lg-3">
-                        <a class="nav-link btn-nav-action" href="<?php echo $base_url; ?>user/add_property.php">
-                            <i class="fa-solid fa-plus me-1"></i> Add Property
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link logout-link ms-lg-2" href="<?php echo $base_url; ?>auth/logout.php">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        </a>
-                    </li>
-
-                <?php else: ?>
-                    <li class="nav-item">
-                        <a class="nav-link btn-nav-outline" href="<?php echo $base_url; ?>auth/login.php">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn-nav-action" href="<?php echo $base_url; ?>auth/register.php">Register</a>
-                    </li>
-                <?php endif; ?>
-            </ul>
-        </div>
     </div>
-</nav>
+  </header>
+
+  <main class="main">

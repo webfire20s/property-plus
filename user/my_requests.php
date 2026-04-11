@@ -18,98 +18,133 @@ $stmt->execute([$user_id]);
 $requests = $stmt->fetchAll();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Requests | Property Plus</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body {
-    background: #f8fafc;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-}
+    body {
+        background: #f7f7f7;
+        font-family: 'Poppins', sans-serif;
+    }
 
-.container-box {
-    padding: 40px 0;
-}
+    .container-box {
+        padding: 60px 0;
+    }
 
-.card-request {
-    background: #fff;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    padding: 20px;
-    margin-bottom: 15px;
-}
+    .card-request {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #ebebeb;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
 
-.status-pill {
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
+    .card-request:hover {
+        transform: translateX(5px);
+        border-color: #2eca6a;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
 
-.status-pending {
-    background: #fff7ed;
-    color: #c2410c;
-}
+    .status-pill {
+        padding: 5px 15px;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
-.status-accepted {
-    background: #ecfdf5;
-    color: #065f46;
-}
+    /* Template color matching */
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
 
-.status-rejected {
-    background: #fef2f2;
-    color: #991b1b;
-}
+    .status-accepted {
+        background: #2eca6a;
+        color: #fff;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .req-title {
+        color: #000;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .req-date {
+        color: #888;
+        font-size: 0.85rem;
+    }
 </style>
-</head>
-
-<body>
 
 <div class="container container-box">
 
-    <h3 class="fw-bold mb-4">My Contact Requests</h3>
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h3 class="fw-bold m-0" style="border-left: 5px solid #2eca6a; padding-left: 15px;">
+                My Contact Requests
+            </h3>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb justify-content-md-end bg-transparent p-0 m-0">
+                    <li class="breadcrumb-item"><a href="dashboard.php" class="text-success">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Requests</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 
     <?php if (count($requests) > 0): ?>
 
-        <?php foreach ($requests as $r): ?>
+        <div class="row">
+            <?php foreach ($requests as $r): ?>
+                <div class="col-12" data-aos="fade-up">
+                    <div class="card-request shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="req-title">
+                                    <i class="bi bi-house-heart me-2 text-success"></i>
+                                    <?= htmlspecialchars($r['title']) ?>
+                                </h5>
+                                <div class="req-date">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    Requested on: <?= date("d M Y", strtotime($r['created_at'])) ?>
+                                </div>
+                            </div>
 
-            <div class="card-request shadow-sm">
-
-                <h5 class="fw-bold mb-2">
-                    <?= htmlspecialchars($r['title']) ?>
-                </h5>
-
-                <p class="text-muted small mb-2">
-                    Requested on: <?= date("d M Y", strtotime($r['created_at'])) ?>
-                </p>
-
-                <?php
-                    $status = $r['status'] ?? 'pending';
-                ?>
-
-                <span class="status-pill status-<?= $status ?>">
-                    <?= ucfirst($status) ?>
-                </span>
-
-            </div>
-
-        <?php endforeach; ?>
+                            <?php
+                                $status = $r['status'] ?? 'pending';
+                            ?>
+                            <div class="text-end">
+                                <span class="status-pill status-<?= strtolower($status) ?>">
+                                    <?= ucfirst($status) ?>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
 
     <?php else: ?>
 
-        <div class="alert alert-light border">
-            You haven't sent any requests yet.
+        <div class="text-center py-5 bg-white rounded-4 border">
+            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+            <p class="text-secondary mt-3">You haven't sent any requests yet.</p>
+            <a href="properties.php" class="btn btn-success px-4 py-2">Browse Properties</a>
         </div>
 
     <?php endif; ?>
 
 </div>
 
-</body>
-</html>
+<?php 
+// 2. Include the footer (Already part of your structure)
+include('../includes/footer.php'); 
+?>

@@ -18,23 +18,16 @@ $plan = $stmt->fetch();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Checkout | Property Plus</title>
+    <title>Secure Checkout | EstateAgency</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root {
-            --slate-50: #f8fafc;
-            --slate-200: #e2e8f0;
-            --slate-900: #0f172a;
-            --blue-600: #2563eb;
-            --emerald-500: #10b981;
-        }
-
         body { 
-            background-color: var(--slate-50); 
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f7f7f7; 
+            font-family: 'Poppins', sans-serif;
+            color: #2b2b2b;
         }
 
         .checkout-container {
@@ -44,17 +37,18 @@ $plan = $stmt->fetch();
 
         .payment-card {
             background: #ffffff;
-            border: 1px solid var(--slate-200);
+            border: 1px solid #ebebeb;
             border-radius: 24px;
             padding: 40px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
         }
 
         .order-summary {
-            background: var(--slate-50);
+            background: #f8fafc;
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
         }
 
         .txn-badge {
@@ -63,11 +57,11 @@ $plan = $stmt->fetch();
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 0.85rem;
-            color: var(--slate-900);
+            color: #0f172a;
         }
 
         .btn-pay {
-            background-color: var(--emerald-500);
+            background-color: #2eca6a; /* Theme Green */
             color: white !important;
             border: none;
             border-radius: 12px;
@@ -79,11 +73,11 @@ $plan = $stmt->fetch();
             display: block;
             text-align: center;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+            box-shadow: 0 4px 14px 0 rgba(46, 202, 106, 0.3);
         }
 
         .btn-pay:hover {
-            background-color: #059669;
+            background-color: #25a556;
             transform: translateY(-2px);
         }
 
@@ -93,6 +87,11 @@ $plan = $stmt->fetch();
             color: #94a3b8;
             font-size: 0.85rem;
         }
+        
+        .method-active {
+            border: 1px solid #2eca6a !important;
+            background: #f0fff4;
+        }
     </style>
 </head>
 <body>
@@ -101,7 +100,7 @@ $plan = $stmt->fetch();
     <div class="payment-card">
         <div class="text-center mb-4">
             <div class="mb-2">
-                <i class="fa-solid fa-shield-check text-primary fa-3x"></i>
+                <i class="fa-solid fa-shield-halved text-success fa-3x"></i>
             </div>
             <h3 class="fw-bold">Secure Checkout</h3>
             <p class="text-muted small">Transaction Reference: <span class="txn-badge"><?= $txn_id ?></span></p>
@@ -125,13 +124,13 @@ $plan = $stmt->fetch();
 
         <div class="mb-4">
             <label class="form-label small fw-bold text-uppercase text-muted">Select Payment Method</label>
-            <div class="border rounded-3 p-3 d-flex align-items-center mb-2" style="border-color: var(--blue-600) !important; background: #eff6ff;">
-                <i class="fa-solid fa-credit-card me-3 text-primary"></i>
+            <div class="border rounded-3 p-3 d-flex align-items-center mb-2 method-active">
+                <i class="fa-solid fa-credit-card me-3 text-success"></i>
                 <div class="flex-grow-1">
                     <div class="fw-bold small">Simulated Gateway</div>
                     <div class="text-muted" style="font-size: 0.75rem;">Instant Activation</div>
                 </div>
-                <i class="fa-solid fa-circle-check text-primary"></i>
+                <i class="fa-solid fa-circle-check text-success"></i>
             </div>
         </div>
 

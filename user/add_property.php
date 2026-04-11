@@ -64,154 +64,105 @@ $categories = [
 ];
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Property | PropertyPlus</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --brand-gold: #fbbf24;
-            --brand-green: #16a34a;
-            --slate-50: #f8fafc;
-            --slate-200: #e2e8f0;
-            --slate-900: #0f172a;
-        }
 
-        body { 
-            background-color: var(--slate-50); 
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: var(--slate-900);
-        }
 
-        .form-container {
-            max-width: 850px;
-            margin: 60px auto;
-        }
+<style>
+    .form-container {
+        max-width: 850px;
+        margin: 40px auto;
+        margin-top: 100px; /* Space for the sticky navbar */
+    }
 
-        .upload-card {
-            background: #ffffff;
-            border: 1px solid var(--slate-200);
-            border-radius: 30px;
-            padding: 45px;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.05);
-        }
+    .upload-card {
+        background: #ffffff;
+        border: 1px solid #ebebeb;
+        border-radius: 20px;
+        padding: 45px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
 
-        .section-header {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #94a3b8;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-            margin-top: 10px;
-        }
+    .section-header {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #2eca6a; /* Theme Green */
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        margin-top: 20px;
+    }
 
-        .section-header::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: var(--slate-200);
-            margin-left: 20px;
-        }
+    .section-header::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #eee;
+        margin-left: 20px;
+    }
 
-        .form-control, .form-select {
-            border-radius: 14px;
-            padding: 14px 18px;
-            border: 1px solid var(--slate-200);
-            background-color: #fcfdfe;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        transition: all 0.3s;
+    }
 
-        .form-control:focus, .form-select:focus {
-            border-color: var(--brand-gold);
-            background-color: #fff;
-            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
-        }
+    .form-control:focus, .form-select:focus {
+        border-color: #2eca6a;
+        box-shadow: 0 0 0 3px rgba(46, 202, 106, 0.1);
+    }
 
-        .form-label {
-            margin-left: 4px;
-            color: #475569;
-        }
+    .image-upload-box {
+        border: 2px dashed #2eca6a;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        background: #f9f9f9;
+        cursor: pointer;
+        transition: 0.3s;
+    }
 
-        .image-upload-box {
-            border: 2px dashed var(--slate-200);
-            border-radius: 20px;
-            padding: 50px;
-            text-align: center;
-            background: #f8fafc;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+    .image-upload-box:hover {
+        background: #f0fdf4;
+    }
 
-        .image-upload-box:hover {
-            border-color: var(--brand-green);
-            background: #f0fdf4;
-            transform: scale(1.01);
-        }
+    .btn-post {
+        background-color: #2eca6a;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 15px;
+        font-weight: 700;
+        width: 100%;
+        margin-top: 30px;
+        transition: 0.3s;
+    }
 
-        .image-upload-box i {
-            color: var(--brand-green);
-            margin-bottom: 15px;
-        }
+    .btn-post:hover {
+        background-color: #25a556;
+        transform: translateY(-2px);
+    }
+</style>
 
-        .btn-post {
-            background-color: var(--brand-gold);
-            color: var(--slate-900) !important;
-            border: none;
-            border-radius: 16px;
-            padding: 18px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            width: 100%;
-            margin-top: 35px;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-post:hover {
-            background-color: #f59e0b;
-            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2);
-            transform: translateY(-2px);
-        }
-
-        #fileCount {
-            background-color: var(--brand-green) !important;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-weight: 700;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container form-container">
+<div class="container form-container" data-aos="fade-up">
     <div class="upload-card">
         <div class="mb-5 text-center">
-            <h2 class="fw-extrabold" style="font-weight: 800;">List Your Property</h2>
-            <p class="text-secondary">Reach verified partners and builders in your district.</p>
+            <h2 class="fw-bold" style="color: #000;">List Your Property</h2>
+            <p class="text-secondary">Fill in the details below to publish your property listing.</p>
         </div>
 
         <form method="POST" enctype="multipart/form-data">
             
             <div class="section-header">Basic Information</div>
-            <div class="row g-4 mb-5">
+            <div class="row g-4 mb-4">
                 <div class="col-12">
                     <label class="form-label small fw-bold">Property Title</label>
-                    <input name="title" class="form-control" placeholder="e.g. 3BHK Luxury Apartment in Sector 62" required>
+                    <input name="title" class="form-control" placeholder="e.g. 3BHK Luxury Apartment" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-bold">Property Type</label>
-                    <select name="type" class="form-select">
+                    <select name="type" class="form-select" required>
                         <option value="">Select Category</option>
                         <?php foreach($categories as $cat): ?>
                             <option value="<?= $cat ?>" <?= (($_GET['category'] ?? '')==$cat)?'selected':'' ?>>
@@ -222,33 +173,33 @@ $categories = [
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-bold">Price (₹)</label>
-                    <input name="price" type="number" class="form-control" placeholder="50,00,000" required>
+                    <input name="price" type="number" class="form-control" placeholder="5000000" required>
                 </div>
             </div>
 
             <div class="section-header">Location & Details</div>
-            <div class="row g-4 mb-5">
+            <div class="row g-4 mb-4">
                 <div class="col-md-12">
                     <label class="form-label small fw-bold">City / District</label>
                     <input name="city" class="form-control" placeholder="e.g. Noida, Uttar Pradesh" required>
                 </div>
                 <div class="col-12">
                     <label class="form-label small fw-bold">Full Description</label>
-                    <textarea name="description" class="form-control" rows="4" placeholder="Describe the area, amenities, and nearby landmarks..."></textarea>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Describe amenities, landmarks..."></textarea>
                 </div>
             </div>
 
             <div class="section-header">Property Media</div>
             <div class="image-upload-box" onclick="document.getElementById('imgInput').click();">
-                <i class="fa-solid fa-images fa-3x"></i>
-                <h5 class="fw-bold">Upload Property Photos</h5>
-                <p class="text-muted small mb-0">High-quality photos increase visibility by 80%</p>
+                <i class="bi bi-cloud-arrow-up text-success" style="font-size: 3rem;"></i>
+                <h5 class="fw-bold mt-2">Upload Property Photos</h5>
+                <p class="text-muted small mb-0">Click to select multiple images</p>
                 <input type="file" name="images[]" id="imgInput" multiple required style="display: none;" onchange="updateLabel(this)">
                 <div id="fileCount" class="badge bg-success mt-3 d-none">0 files selected</div>
             </div>
 
             <button type="submit" class="btn-post">
-                Publish Listing <i class="fa-solid fa-arrow-right ms-2"></i>
+                Publish Listing <i class="bi bi-arrow-right ms-2"></i>
             </button>
         </form>
     </div>
@@ -265,6 +216,7 @@ $categories = [
     }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php 
+// 2. Include the footer (Handles AOS and JS scripts)
+include('../includes/footer.php'); 
+?>
