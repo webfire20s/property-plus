@@ -90,16 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .brand-logo {
-            width: 70px;
-            height: 70px;
-            background: var(--theme-dark);
-            color: var(--theme-green);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: block;
             margin: 0 auto 25px auto;
-            font-size: 2rem;
+            text-align: center;
+        }
+
+        .brand-logo img {
+            max-width: 180px; /* Adjust width as per your logo shape */
+            height: auto;
         }
 
         .login-title {
@@ -201,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="login-card">
     <div class="brand-logo">
-        <i class="fa-solid fa-house-lock"></i>
+        <img src="../assets/logo.png" alt="Property Plus Logo">
     </div>
     <h3 class="login-title">Partner Portal</h3>
     <p class="login-subtitle">Access your listing management dashboard</p>

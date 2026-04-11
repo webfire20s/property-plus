@@ -61,12 +61,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-size: 20px 20px;
         }
 
+        /* Logo styling */
+        .brand-logo {
+            display: block;
+            margin: 0 auto 25px auto;
+            text-align: center;
+        }
+
+        .brand-logo img {
+            max-width: 180px;
+            height: auto;
+        }
+
         .reg-card {
             background: white;
             border-radius: 20px;
             border: 1px solid #ebebeb;
             padding: 45px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        /* Top accent bar */
+        .reg-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--theme-green);
+            border-radius: 20px 20px 0 0;
         }
 
         .form-control {
@@ -145,6 +170,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
+            <div class="brand-logo">
+                <img src="../assets/logo.png" alt="Property Plus Logo">
+            </div>
+
             <div class="text-center mb-5">
                 <h2 class="fw-bold mb-2" style="color: var(--theme-dark);">Become a Professional Partner</h2>
                 <p class="text-muted">Join the most trusted real estate network in Uttar Pradesh.</p>
@@ -185,23 +214,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="row g-3 mb-5">
                         <div class="col-12">
                             <label class="form-label">Business / Agency Name</label>
-                            <input name="business_name" class="form-control" placeholder="e.g. Bansal Realty Group" required>
+                            <input name="business_name" class="form-control" placeholder="Business Name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">State</label>
-                            <input name="state" class="form-control" placeholder="Uttar Pradesh"  required>
+                            <input name="state" class="form-control" placeholder="State"  required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">District</label>
-                            <input name="district" class="form-control" placeholder="e.g. Firozabad" required>
+                            <input name="district" class="form-control" placeholder="District/City" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">RERA Number</label>
-                            <input name="rera" class="form-control" placeholder="UPRERAPRJXXXX" required>
+                            <input name="rera" class="form-control" placeholder="RERA No." required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">GST Number (Optional)</label>
-                            <input name="gst" class="form-control" placeholder="09AAAAA0000A1Z5">
+                            <input name="gst" class="form-control" placeholder="GSTIN">
                         </div>
                     </div>
 
@@ -211,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <div class="mb-4">
                         <label class="form-label">Password</label>
-                        <input name="password" type="password" class="form-control" placeholder="Minimum 8 characters" required>
+                        <input name="password" type="password" class="form-control" placeholder="*********" required>
                     </div>
 
                     <div class="p-3 info-box rounded-3 small mb-4">
