@@ -180,3 +180,10 @@ CREATE TABLE property_media (
 );
 
 ALTER TABLE properties ADD COLUMN video VARCHAR(255) NULL;
+
+================================================================================================================================================================================================================
+
+date = 13 april (monday)
+
+ALTER TABLE property_documents 
+ADD rejection_reason TEXT NULL;

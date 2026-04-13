@@ -20,9 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gst = $_POST['gst'];
 
     // Validation checks remain untouched
-    if (empty($rera)) { die("RERA number is required"); }
-    if (preg_match("/^[0-9]+$/", $rera)) { die("Invalid RERA number"); }
-    if (!preg_match("/^[A-Z0-9\/\-]{8,25}$/i", $rera)) { die("Invalid RERA format"); }
+    //if (empty($rera)) { die("RERA number is required"); }
+    //if (preg_match("/^[0-9]+$/", $rera)) { die("Invalid RERA number"); }
+    //if (!preg_match("/^[A-Z0-9\/\-]{8,25}$/i", $rera)) { die("Invalid RERA format"); }
     if (!empty($gst)) {
         if (!preg_match("/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/", $gst)) { die("Invalid GST number"); }
     }
@@ -31,8 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$phone, $password, $business_name, $state, $district, $rera, $gst]);
     $user_id = $pdo->lastInsertId();
 
+    // 🔗 Link payment to this user
+    $pdo->prepare("
+        UPDATE payments 
+        SET user_id = ? 
+        WHERE user_id IS NULL AND type = 'registration'
+        ORDER BY id DESC 
+        LIMIT 1
+    ")->execute([$user_id]);
+
     unset($_SESSION['otp_verified'], $_SESSION['otp'], $_SESSION['otp_phone']);
-    header("Location: ../user/registration_payment.php?user_id=$user_id");
+    //header("Location: ../user/registration_payment.php?user_id=$user_id");
     exit;
 }
 ?>
@@ -176,11 +185,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="text-center mb-5">
                 <h2 class="fw-bold mb-2" style="color: var(--theme-dark);">Become a Professional Partner</h2>
-                <p class="text-muted">Join the most trusted real estate network in Uttar Pradesh.</p>
+                <p class="text-muted">Join the most trusted real estate network in India.</p>
             </div>
 
             <div class="reg-card">
-                <form method="POST">
+                <form method="POST" id="registerForm">
                     <div class="step-title">
                         <h5 class="fw-bold mb-0">01. Identity Verification</h5>
                     </div>
@@ -225,8 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input name="district" class="form-control" placeholder="District/City" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">RERA Number</label>
-                            <input name="rera" class="form-control" placeholder="RERA No." required>
+                            <label class="form-label">RERA Number (Optional)</label>
+                            <input name="rera" class="form-control" placeholder="RERA No." >
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">GST Number (Optional)</label>
@@ -243,14 +252,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input name="password" type="password" class="form-control" placeholder="*********" required>
                     </div>
 
-                    <div class="p-3 info-box rounded-3 small mb-4">
+                    <!-- <div class="p-3 info-box rounded-3 small mb-4">
                         <i class="fa-solid fa-shield-halved me-2"></i> 
                         Registration requires a one-time activation fee of <b>₹1,000</b> to verify your agency status.
-                    </div>
+                    </div> -->
 
-                    <button type="submit" class="btn-register shadow-sm">
+                    <button type="button" onclick="payRegistration()" class="btn-register shadow-sm">
                         Confirm & Proceed to Payment
                     </button>
+                    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
                     
                     <p class="text-center mt-4 text-muted small">
                         Already have an account? <a href="login.php" class="text-success fw-bold text-decoration-none">Sign In</a>
@@ -260,7 +270,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+<script>
+function payRegistration() {
 
+    fetch('../user/create_order.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'amount=1000&type=registration'
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.order_id) {
+            console.log(data);
+            alert("Payment init failed: " + (data.error || "Unknown error"));
+            return;
+        }
+
+        var options = {
+            "key": data.key,
+            "amount": data.amount * 100,
+            "currency": "INR",
+            "name": "PropertyPlus",
+            "description": "Registration Fee",
+            "order_id": data.order_id,
+
+            // ✅ ADD THIS (VERY IMPORTANT)
+            "prefill": {
+                "name": document.querySelector('[name=business_name]').value || "User",
+                "email": "test@example.com",
+                "contact": document.querySelector('[name=phone]').value || "9999999999"
+            },
+
+            // ✅ ENABLE TEST FRIENDLY FLOW
+            "config": {
+                "display": {
+                    "blocks": {
+                        "utib": { // UPI block
+                            "name": "Pay via UPI",
+                            "instruments": [
+                                {
+                                    "method": "upi"
+                                }
+                            ]
+                        }
+                    },
+                    "sequence": ["block.utib"],
+                    "preferences": {
+                        "show_default_blocks": true
+                    }
+                }
+            },
+
+            "handler": function (response) {
+                fetch('../user/verify_payment.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(response)
+                })
+                .then(res => res.text())
+                .then(res => {
+                    if (res === "success") {
+                        document.getElementById("registerForm").submit();
+                    } else {
+                        alert("Payment verification failed");
+                    }
+                });
+            },
+
+            "theme": {
+                "color": "#2eca6a"
+            }
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.open();
+
+    });
+}
+</script>
 <script>
 function sendOTP() {
     let phone = document.querySelector('[name=phone]').value;

@@ -69,6 +69,11 @@ $properties = $stmt->fetchAll();
     <?php if (count($properties) > 0): ?>
         <?php foreach ($properties as $p): ?>
             <div class="listing-card p-3 mb-4 shadow-sm" data-aos="fade-up">
+                <?php
+                $docs = $pdo->prepare("SELECT * FROM property_documents WHERE property_id=?");
+                $docs->execute([$p['id']]);
+                $documents = $docs->fetchAll();
+                ?>
                 <div class="row align-items-center">
                     <div class="col-auto">
                         <?php 
@@ -99,6 +104,46 @@ $properties = $stmt->fetchAll();
                         <div class="fw-bold text-success" style="font-size: 1.2rem;">
                             ₹<?php echo number_format($p['price']); ?>
                         </div>
+                        <?php if(!empty($documents)): ?>
+                        <div class="mt-3">
+
+                            <small class="fw-bold text-muted">Document Status:</small>
+
+                            <?php foreach($documents as $doc): ?>
+
+                                <div class="mt-2 p-2 border rounded bg-light">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small fw-semibold">
+                                            <?= strtoupper(str_replace('_',' ', $doc['document_type'])) ?>
+                                        </span>
+
+                                        <span class="badge 
+                                            <?= $doc['status']=='verified' ? 'bg-success' : ($doc['status']=='rejected' ? 'bg-danger' : 'bg-warning') ?>">
+                                            <?= ucfirst($doc['status']) ?>
+                                        </span>
+                                    </div>
+
+                                    <?php if($doc['status'] == 'rejected' && !empty($doc['rejection_reason'])): ?>
+                                        <div class="mt-2">
+                                            <small class="text-danger">
+                                                <strong>Reason:</strong> <?= htmlspecialchars($doc['rejection_reason']) ?>
+                                            </small>
+                                        </div>
+
+                                        <div class="mt-1">
+                                            <small class="text-muted">
+                                                Please re-upload this document to continue verification.
+                                            </small>
+                                        </div>
+                                    <?php endif; ?>
+
+                                </div>
+
+                            <?php endforeach; ?>
+
+                        </div>
+                    <?php endif; ?>
                     </div>
 
                     <div class="col-md-3 text-md-end mt-3 mt-md-0 border-start-md">

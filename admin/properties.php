@@ -90,9 +90,17 @@ require '../config/db.php';
                             <small class="text-muted fw-bold">ID: #<?= $p['id'] ?></small>
                         </div>
 
-                        <h5 class="fw-bold text-dark mb-3 line-clamp-2" style="min-height: 3rem;">
+                        <h5 class="fw-bold text-dark mb-2">
                             <?= htmlspecialchars($p['title']) ?>
                         </h5>
+
+                        <p class="mb-1 small text-muted">
+                            <strong>₹<?= number_format($p['price']) ?></strong> • <?= htmlspecialchars($p['city']) ?>
+                        </p>
+
+                        <p class="mb-2 small text-muted">
+                            <?= htmlspecialchars($p['property_type']) ?> • <?= htmlspecialchars($p['purpose'] ?? '') ?>
+                        </p>
 
                         <div class="mt-auto pt-3 border-top">
                             <?php if ($p['status'] == 'pending'): ?>
@@ -114,10 +122,151 @@ require '../config/db.php';
                                 </div>
                             <?php endif; ?>
                         </div>
+                        <button class="btn btn-sm btn-outline-dark w-100 mb-2" data-bs-toggle="modal" data-bs-target="#viewModal<?= $p['id'] ?>">
+                            View Full Details
+                        </button>
+                    </div>
+                </div>
+                <div class="modal fade" id="viewModal<?= $p['id'] ?>" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title"><?= htmlspecialchars($p['title']) ?></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+
+                                <p><strong>Price:</strong> ₹<?= number_format($p['price']) ?></p>
+                                <p><strong>City:</strong> <?= htmlspecialchars($p['city']) ?></p>
+                                <p><strong>Type:</strong> <?= htmlspecialchars($p['property_type']) ?></p>
+                                <p><strong>Transaction:</strong> <?= htmlspecialchars($p['purpose']) ?></p>
+                                <p><strong>Area:</strong> <?= htmlspecialchars($p['area'] ?? '-') ?></p>
+                                <p><strong>Address:</strong> <?= htmlspecialchars($p['address'] ?? '-') ?></p>
+                                <p><strong>Description:</strong><br><?= nl2br(htmlspecialchars($p['description'])) ?></p>
+
+                                <hr>
+
+                                <h6 class="fw-bold">Property Images</h6>
+
+                                <div class="row">
+                                <?php
+                                $imgs = $pdo->prepare("SELECT * FROM property_images WHERE property_id=?");
+                                $imgs->execute([$p['id']]);
+                                foreach ($imgs as $img):
+                                ?>
+                                    <div class="col-4 mb-3 text-center">
+                                        <img src="../uploads/<?= $img['image_path'] ?>" class="img-fluid rounded mb-2" style="height:120px; object-fit:cover;">
+                                        
+                                        <a href="../uploads/<?= $img['image_path'] ?>" target="_blank" class="btn btn-sm btn-outline-primary w-100 mb-1">
+                                            Preview
+                                        </a>
+
+                                        <a href="../uploads/<?= $img['image_path'] ?>" download class="btn btn-sm btn-outline-dark w-100">
+                                            Download
+                                        </a>
+                                    </div>
+                                <?php endforeach; ?>
+                                </div>
+
+                                <hr>
+
+                                <h6 class="fw-bold">Documents</h6>
+
+                                <?php
+                                $docs = $pdo->prepare("SELECT * FROM property_documents WHERE property_id=?");
+                                $docs->execute([$p['id']]);
+                                $allDocs = $docs->fetchAll();
+                                foreach ($allDocs as $doc):
+                                ?>
+                                <div class="border rounded p-3 mb-3">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong><?= strtoupper(str_replace('_',' ', $doc['document_type'])) ?></strong>
+
+                                        <span class="badge 
+                                            <?= $doc['status']=='verified' ? 'bg-success' : ($doc['status']=='rejected' ? 'bg-danger' : 'bg-warning') ?>">
+                                            <?= ucfirst($doc['status']) ?>
+                                        </span>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+
+                                        <a href="../uploads/docs/<?= $doc['file_path'] ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            Preview
+                                        </a>
+
+                                        <a href="../uploads/docs/<?= $doc['file_path'] ?>" download class="btn btn-sm btn-outline-dark">
+                                            Download
+                                        </a>
+
+                                    </div>
+                                    <div class="d-flex gap-2 mt-2">
+                                        <?php if($doc['status'] == 'rejected' && !empty($doc['rejection_reason'])): ?>
+                                            <div class="mt-2 p-2 bg-light border rounded">
+                                                <small class="text-danger">
+                                                    <strong>Reason:</strong> <?= htmlspecialchars($doc['rejection_reason']) ?>
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <a href="verify_doc.php?id=<?= $doc['id'] ?>&status=verified" 
+                                        class="btn btn-sm btn-success">
+                                            ✔ Verify
+                                        </a>
+
+                                        <button 
+                                            class="btn btn-sm btn-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#rejectModal<?= (int)$doc['id'] ?>">
+                                            ✖ Reject
+                                        </button>
+
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <?php foreach ($allDocs as $doc): ?>
+                <div class="modal fade" id="rejectModal<?= (int)$doc['id'] ?>" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <form method="POST" action="verify_doc.php">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Reject Document</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <input type="hidden" name="doc_id" value="<?= $doc['id'] ?>">
+                                    <input type="hidden" name="status" value="rejected">
+
+                                    <label class="form-label">Reason for Rejection</label>
+                                    <textarea name="reason" class="form-control" required
+                                        placeholder="e.g. Blurry document, invalid proof, missing pages..."></textarea>
+
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-danger">Reject Document</button>
+                                </div>
+
+                            </form>
+
+                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
             </div>
+                <?php endforeach; ?>
 
         </div>
     </div>
