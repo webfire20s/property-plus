@@ -1,4 +1,4 @@
-<?php
+
 require '../config/db.php';
 require '../vendor/autoload.php';
 

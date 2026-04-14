@@ -30,18 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare("INSERT INTO users (phone, password, business_name, state, district, rera_number, gst_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')");
     $stmt->execute([$phone, $password, $business_name, $state, $district, $rera, $gst]);
     $user_id = $pdo->lastInsertId();
+    $_SESSION['temp_user_id'] = $user_id;
 
-    // 🔗 Link payment to this user
-    $pdo->prepare("
-        UPDATE payments 
-        SET user_id = ? 
-        WHERE user_id IS NULL AND type = 'registration'
-        ORDER BY id DESC 
-        LIMIT 1
-    ")->execute([$user_id]);
+    // // 🔗 Link payment to this user
+    // $pdo->prepare("
+    //     UPDATE payments 
+    //     SET user_id = ? 
+    //     WHERE user_id IS NULL AND type = 'registration'
+    //     ORDER BY id DESC 
+    //     LIMIT 1
+    // ")->execute([$user_id]);
 
     unset($_SESSION['otp_verified'], $_SESSION['otp'], $_SESSION['otp_phone']);
-    //header("Location: ../user/registration_payment.php?user_id=$user_id");
+    header("Location: ../user/registration_payment.php?user_id=$user_id");
     exit;
 }
 ?>
@@ -257,10 +258,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Registration requires a one-time activation fee of <b>₹1,000</b> to verify your agency status.
                     </div> -->
 
-                    <button type="button" onclick="payRegistration()" class="btn-register shadow-sm">
+                    <button type="submit" class="btn-register shadow-sm">
                         Confirm & Proceed to Payment
                     </button>
-                    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+                    <!-- <script src="https://checkout.razorpay.com/v1/checkout.js"></script> -->
                     
                     <p class="text-center mt-4 text-muted small">
                         Already have an account? <a href="login.php" class="text-success fw-bold text-decoration-none">Sign In</a>
@@ -270,7 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
-<script>
+<!-- <script>
 function payRegistration() {
 
     fetch('../user/create_order.php', {
@@ -350,7 +351,7 @@ function payRegistration() {
 
     });
 }
-</script>
+</script> -->
 <script>
 function sendOTP() {
     let phone = document.querySelector('[name=phone]').value;

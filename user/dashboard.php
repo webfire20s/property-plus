@@ -86,13 +86,23 @@ $membership = $stmt->fetch();
             <div class="stat-card shadow-sm">
                 <h6 class="fw-bold text-secondary mb-4 text-uppercase small">Account Status</h6>
                 
-                <?php if ($membership && strtotime($membership['expiry_date']) >= time()): ?>
+                <?php if ($membership && !empty($membership['expiry_date']) && strtotime($membership['expiry_date']) >= time()): ?>
                     <div class="plan-badge">
                         <i class="bi bi-patch-check-fill me-2"></i><?php echo $membership['plan_name']; ?>
                     </div>
                     <h3 class="fw-bold mb-1">Active Plan</h3>
                     <p class="text-secondary small mb-4">
-                        <i class="bi bi-calendar-event me-2"></i>Valid until: <b><?php echo date("d M, Y", strtotime($membership['expiry_date'])); ?></b>
+                        <i class="bi bi-calendar-event me-2"></i>
+                        Valid until: 
+                        <b>
+                            <?php 
+                            if (!empty($membership['expiry_date']) && strtotime($membership['expiry_date']) > 0) {
+                                echo date("d M, Y", strtotime($membership['expiry_date']));
+                            } else {
+                                echo "N/A";
+                            }
+                            ?>
+                        </b>
                     </p>
                     <a href="membership.php" class="btn btn-success w-100 rounded-pill py-2 fw-bold" style="background:#2eca6a; border:none;">Manage Plan</a>
                 

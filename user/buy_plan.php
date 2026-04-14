@@ -1,7 +1,6 @@
 <?php
 require '../includes/auth_check.php';
 require '../config/db.php';
-// We don't include navbar here because this is a transitional processing page
 
 if (!isset($_GET['id'])) {
     die("Invalid Request");
@@ -9,7 +8,7 @@ if (!isset($_GET['id'])) {
 
 $plan_id = $_GET['id'];
 
-// Get plan (Logic Untouched)
+// Get plan
 $stmt = $pdo->prepare("SELECT * FROM memberships WHERE id=?");
 $stmt->execute([$plan_id]);
 $plan = $stmt->fetch();
@@ -18,20 +17,12 @@ if (!$plan) {
     die("Invalid Plan");
 }
 
-// Create payment entry (Logic Untouched)
-$txn_id = "TXN" . time() . rand(1000,9999);
+// ✅ Store plan in session (IMPORTANT)
+$_SESSION['membership_plan_id'] = $plan_id;
 
-$stmt = $pdo->prepare("
-    INSERT INTO payments (user_id, amount, type, txn_id, plan_id, status)
-    VALUES (?, ?, 'membership', ?, ?, 'pending')
-");
-
-$stmt->execute([
-    $_SESSION['user_id'],
-    $plan['price'],
-    $txn_id,
-    $plan_id
-]);
+// ✅ Redirect to QR payment page
+header("Location: membership_payment.php");
+exit;
 
 // --- PROFESSIONAL REDIRECT UI ---
 ?>

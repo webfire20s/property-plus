@@ -187,3 +187,25 @@ date = 13 april (monday)
 
 ALTER TABLE property_documents 
 ADD rejection_reason TEXT NULL;
+
+====================================================================================================================================================================================================================
+
+date = 14 april (tuesday)
+
+CREATE TABLE payment_screenshots (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    type VARCHAR(50),
+    screenshot VARCHAR(255),
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    rejection_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE payment_screenshots ADD COLUMN plan_id INT NULL;
+
+ALTER TABLE users 
+ADD membership_plan INT NULL,
+ADD membership_status VARCHAR(20) DEFAULT 'inactive';
+
+ALTER TABLE payment_screenshots ADD amount DECIMAL(10,2);
