@@ -3,15 +3,68 @@ require '../includes/auth_check.php';
 require '../config/db.php';
 include '../includes/navbar.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    require '../includes/membership_check.php';
+// ✅ Get active membership
+$stmt = $pdo->prepare("
+    SELECT um.*, m.name, m.property_limit
+    FROM user_memberships um
+    JOIN memberships m ON um.membership_id = m.id
+    WHERE um.user_id=? AND um.status='active'
+    ORDER BY um.id DESC LIMIT 1
+");
+$stmt->execute([$_SESSION['user_id']]);
+$membership = $stmt->fetch();
 
+// ✅ DEFAULT: Listing Plan (FREE)
+$plan_name = 'Listing';
+$image_limit = 0;
+$allow_video = false;
+$property_limit = 999; // unlimited text listings
+
+// ✅ If user has paid membership → override defaults
+if ($membership) {
+
+    $plan_name = strtolower($membership['name']);
+    $property_limit = $membership['property_limit'];
+
+    switch ($plan_name) {
+
+        case 'basic':
+            $image_limit = 5;
+            break;
+
+        case 'silver':
+            $image_limit = 10;
+            break;
+
+        case 'gold':
+            $image_limit = 20;
+            break;
+
+        case 'platinum':
+            $image_limit = 999; // unlimited
+            $allow_video = true;
+            break;
+    }
+}
+
+// ✅ HANDLE FORM
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+    // Only check membership if user actually has a paid plan
+    if ($membership) {
+        require '../includes/membership_check.php';
+    }
+
+    // Count properties
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM properties WHERE user_id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $count = $stmt->fetchColumn();
 
-    if ($count >= $membership['property_limit']) {
-        echo "<div class='alert alert-danger text-center'>Limit reached. <a href='membership.php'>Upgrade your plan</a></div>";
+    // ✅ SAFE LIMIT CHECK
+    if ($count >= $property_limit) {
+        echo "<div class='alert alert-danger text-center'>
+                Limit reached. <a href='membership.php'>Upgrade your plan</a>
+              </div>";
     } else {
 
         // SAFE INPUTS
@@ -25,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $address = htmlspecialchars($_POST['address'] ?? '');
         $pincode = $_POST['pincode'] ?? '';
 
-        // INSERT PROPERTY WITH STATUS
+        // INSERT PROPERTY
         $stmt = $pdo->prepare("
             INSERT INTO properties 
             (user_id, title, description, price, city, property_type, area, purpose, address, pincode, status) 
@@ -47,44 +100,74 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $property_id = $pdo->lastInsertId();
 
-        // IMAGE VALIDATION FIX
-        if (empty($_FILES['images']['name'][0])) {
-            die("<div class='alert alert-danger text-center'>At least one image is required</div>");
-        }
+        // ✅ IMAGE VALIDATION (NO FORCE)
+        if (isset($_FILES['images'])) {
 
-        foreach ($_FILES['images']['name'] as $key => $image_name) {
-            $tmp = $_FILES['images']['tmp_name'][$key];
-            $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
-            $allowed = ['jpg', 'jpeg', 'png'];
+            $total_images = count(array_filter($_FILES['images']['name']));
 
-            if (in_array($ext, $allowed)) {
-                $new_name = time() . rand(1000,9999) . "." . $ext;
-                move_uploaded_file($tmp, "../uploads/" . $new_name);
+            if ($total_images > $image_limit) {
+                die("You can upload maximum $image_limit images in your current plan.");
+            }
 
-                $img = $pdo->prepare("INSERT INTO property_images (property_id, image_path) VALUES (?, ?)");
-                $img->execute([$property_id, $new_name]);
+            if ($image_limit == 0 && $total_images > 0) {
+                die("Your current plan does not allow image uploads.");
+            }
+
+            // Upload if allowed
+            if ($image_limit > 0 && $total_images > 0) {
+
+                foreach ($_FILES['images']['name'] as $key => $image_name) {
+
+                    $tmp = $_FILES['images']['tmp_name'][$key];
+                    $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
+                    $allowed = ['jpg', 'jpeg', 'png'];
+
+                    if (in_array($ext, $allowed)) {
+
+                        $new_name = time() . rand(1000,9999) . "." . $ext;
+                        move_uploaded_file($tmp, "../uploads/" . $new_name);
+
+                        $img = $pdo->prepare("
+                            INSERT INTO property_images (property_id, image_path) 
+                            VALUES (?, ?)
+                        ");
+                        $img->execute([$property_id, $new_name]);
+                    }
+                }
             }
         }
 
-        // DOCUMENT UPLOAD (NEW)
+        // ✅ VIDEO RESTRICTION
+        if (!$allow_video && !empty($_FILES['video']['name'])) {
+            die("Video upload is allowed only in Platinum plan.");
+        }
+
+        // ✅ DOCUMENTS (ALL PLANS ALLOWED)
         $docs = ['sale_deed', 'title_doc', 'layout_plan', 'other_docs'];
 
         foreach ($docs as $doc) {
             if (!empty($_FILES[$doc]['name'])) {
+
                 $file = $_FILES[$doc];
                 $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
                 $new_name = "doc_" . time() . rand(1000,9999) . "." . $ext;
                 move_uploaded_file($file['tmp_name'], "../uploads/docs/" . $new_name);
 
-                $pdo->prepare("INSERT INTO property_documents (property_id, document_type, file_path, status) VALUES (?, ?, ?, 'pending')")
-                    ->execute([$property_id, $doc, $new_name]);
+                $pdo->prepare("
+                    INSERT INTO property_documents 
+                    (property_id, document_type, file_path, status) 
+                    VALUES (?, ?, ?, 'pending')
+                ")->execute([$property_id, $doc, $new_name]);
             }
         }
 
-        echo "<div class='alert alert-success text-center'>Property submitted for review ✅</div>";
+        echo "<div class='alert alert-success text-center'>
+                Property submitted for review ✅
+              </div>";
     }
 }
+
 
 $categories = [
     "Builder Floors",
@@ -283,11 +366,27 @@ $categories = [
             </div>
 
             <div class="section-header">03. Property Media</div>
+            <div class="alert alert-info">
+                <strong>Your Plan:</strong> <?= htmlspecialchars($plan_name) ?><br>
+
+                <?php if ($image_limit == 0): ?>
+                    <span class="text-danger">Text-only listing (no images allowed)</span><br>
+                    <a class="btn btn-warning mt-3" href="membership.php"><strong>Upgrade to upload images</strong></a>
+                <?php else: ?>
+                    You can upload up to <b><?= $image_limit ?></b> images.
+                <?php endif; ?>
+
+                <?php if ($allow_video): ?>
+                    <br>Video upload is enabled.
+                <?php endif; ?>
+            </div>
             <div class="image-upload-box" onclick="document.getElementById('imgInput').click();">
                 <i class="fa-solid fa-cloud-arrow-up text-success mb-2" style="font-size: 2.5rem;"></i>
                 <h5 class="fw-bold">Upload High-Quality Photos</h5>
                 <p class="text-muted small mb-0">Click to select multiple images from your gallery</p>
-                <input type="file" name="images[]" id="imgInput" multiple required style="display: none;" onchange="updateLabel(this)">
+                <input type="file" name="images[]" id="imgInput" multiple 
+                    <?= $image_limit == 0 ? 'disabled' : '' ?> 
+                    style="display: none;" onchange="updateLabel(this)">
                 <div id="fileCount" class="badge bg-success mt-3 d-none">0 files selected</div>
             </div>
 

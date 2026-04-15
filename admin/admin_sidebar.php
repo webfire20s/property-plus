@@ -124,7 +124,7 @@ function renderLinks($current) {
         'users.php' => ['icon' => 'fa-user-group', 'label' => 'User Management'],
         'properties.php' => ['icon' => 'fa-city', 'label' => 'Property Listings'],
         'leads.php' => ['icon' => 'fa-comment-dots', 'label' => 'Inquiry Leads'],
-        'payment_verifications.php' => ['icon' => 'fa-shield', 'label' => 'Verifications'],
+        'payment_verifications.php' => ['icon' => 'fa-shield-halved', 'label' => 'Verifications'],
         'payments.php' => ['icon' => 'fa-receipt', 'label' => 'Payment History'],
     ];
 
@@ -144,4 +144,4 @@ function renderLinks($current) {
         <span>Sign Out</span>
     </a>";
 }
-?>
+?><i class="fa-solid fa-shield-halved"></i>

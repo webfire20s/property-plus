@@ -8,6 +8,8 @@ $stmt = $pdo->query("SELECT * FROM memberships");
 $plans = $stmt->fetchAll();
 ?>
 
+
+
 <style>
     .header-section {
         padding: 100px 0 60px;
@@ -137,50 +139,116 @@ $plans = $stmt->fetchAll();
 
 <div class="container pb-5">
     <div class="row g-5 justify-content-center align-items-center">
+         
         <?php 
         $count = 0;
+        $features_map = [
+            'listing' => [
+                'Browse properties',
+                'Add property (text only)',
+                'No images allowed',
+                'No videos',
+                'Limited visibility',
+                'Document verification'
+            ],
+            'basic' => [
+                'Browse properties',
+                'Add property',
+                'Upload up to 5 images',
+                'Contact users',
+                'Medium visibility',
+                'Document verification'
+            ],
+            'silver' => [
+                'Browse properties',
+                'Add property',
+                'Upload up to 10 images',
+                'Contact users',
+                'Medium+ visibility',
+                'Document verification'
+            ],
+            'gold' => [
+                'Browse properties',
+                'Add property',
+                'Upload up to 20 images',
+                'Contact users',
+                'High visibility',
+                'Document verification'
+            ],
+            'platinum' => [
+                'Browse properties',
+                'Add property',
+                'Unlimited images',
+                'Video upload enabled',
+                'Premium visibility',
+                'Document verification'
+            ]
+        ];
         foreach ($plans as $plan): 
             $count++;
             $is_featured = ($count == 2); 
         ?>
             <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="<?php echo $count * 100; ?>">
                 <div class="pricing-card shadow-sm <?php echo $is_featured ? 'featured-plan' : ''; ?>">
-                    <?php if($is_featured): ?>
-                        <div class="popular-tag">Most Popular</div>
+                    <?php
+                    $stmt = $pdo->prepare("
+                        SELECT m.name 
+                        FROM user_memberships um
+                        JOIN memberships m ON um.membership_id = m.id
+                        WHERE um.user_id=? AND um.status='active'
+                        ORDER BY um.id DESC LIMIT 1
+                    ");
+                    $stmt->execute([$_SESSION['user_id']]);
+                    $current = $stmt->fetch();
+
+                    $current_plan = $current['name'] ?? 'Listing';
+                    ?>
+                    <?php if(strtolower($plan['name']) == 'platinum'): ?>
+                        <span class="badge bg-dark text-warning mb-2">🔥 Most Premium</span>
+                    <?php elseif(strtolower($plan['name']) == 'gold'): ?>
+                        <span class="badge bg-warning text-dark mb-2">⭐ Most Popular</span>
+                    <?php elseif(strtolower($plan['name']) == 'listing'): ?>
+                        <span class="badge bg-secondary mb-2">Free Plan</span>
                     <?php endif; ?>
+                        <?php if ($current_plan == $plan['name']): ?>
+                            <div class="badge bg-success mb-3">Your Current Plan</div>
+                        <?php endif; ?>
 
-                    <span class="plan-name"><?php echo htmlspecialchars($plan['name']); ?></span>
-                    
-                    <div class="plan-price">
-                        ₹<?php echo number_format($plan['price']); ?><span>/year</span>
-                    </div>
-
+                        <span class="plan-name"><?php echo htmlspecialchars($plan['name']); ?></span>
+                        
+                        <div class="plan-price">
+                            ₹<?php echo number_format($plan['price']); ?><span>/year</span>
+                        </div>
+                        
                     <div class="feature-list">
-                        <div class="feature-item">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span><b><?php echo $plan['property_limit']; ?></b> Property Listings</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>Verified Partner Badge</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>Lead Access Dashboard</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>WhatsApp Integration</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>24/7 Priority Support</span>
-                        </div>
+                        <?php
+                        $plan_key = strtolower($plan['name']);
+                        $plan_features = $features_map[$plan_key] ?? [];
+                        ?>
+
+                        <ul class="list-unstyled small mb-4">
+                            <?php foreach ($plan_features as $f): ?>
+                                <li class="mb-2">
+                                    <i class="fa-solid fa-check text-success me-2"></i>
+                                    <?= $f ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
                     </div>
 
-                    <a href='buy_plan.php?id=<?php echo $plan['id']; ?>' class="btn-buy text-center">
-                        Select Plan <i class="bi bi-chevron-right ms-2"></i>
-                    </a>
+                    <?php if ($plan['price'] == 0): ?>
+                        
+                        <a href="dashboard.php" class="btn-buy text-center" style="background:#2eca6a;">
+                            Current Free Plan
+                        </a>
+
+                    <?php else: ?>
+
+                        <a href='buy_plan.php?id=<?php echo $plan['id']; ?>' class="btn-buy text-center">
+                            Select Plan <i class="bi bi-chevron-right ms-2"></i>
+                        </a>
+
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

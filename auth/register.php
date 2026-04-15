@@ -27,22 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!preg_match("/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/", $gst)) { die("Invalid GST number"); }
     }
 
-    $stmt = $pdo->prepare("INSERT INTO users (phone, password, business_name, state, district, rera_number, gst_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')");
+    $stmt = $pdo->prepare("INSERT INTO users (phone, password, business_name, state, district, rera_number, gst_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'active')");
     $stmt->execute([$phone, $password, $business_name, $state, $district, $rera, $gst]);
+
     $user_id = $pdo->lastInsertId();
-    $_SESSION['temp_user_id'] = $user_id;
 
-    // // 🔗 Link payment to this user
-    // $pdo->prepare("
-    //     UPDATE payments 
-    //     SET user_id = ? 
-    //     WHERE user_id IS NULL AND type = 'registration'
-    //     ORDER BY id DESC 
-    //     LIMIT 1
-    // ")->execute([$user_id]);
+    // ✅ Login user immediately
+    $_SESSION['user_id'] = $user_id;
 
+    // Cleanup OTP session
     unset($_SESSION['otp_verified'], $_SESSION['otp'], $_SESSION['otp_phone']);
-    header("Location: ../user/registration_payment.php?user_id=$user_id");
+
+    // ✅ Redirect directly to dashboard
+    header("Location: ../user/dashboard.php");
     exit;
 }
 ?>
