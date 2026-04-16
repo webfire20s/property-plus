@@ -8,8 +8,8 @@
           <i class="bi bi-geo-alt icon"></i>
           <div class="address">
             <h4>Address</h4>
-            <p>A108 Adam Street</p>
-            <p>New York, NY 535022</p>
+            <p>Movik International </p>
+            <p>Office: B-70, 1st Floor, Ramesh Nagar, New Delhi – 110015</p>
             <p></p>
           </div>
 
@@ -20,8 +20,8 @@
           <div>
             <h4>Contact</h4>
             <p>
-              <strong>Phone:</strong> <span>+1 5589 55488 55</span><br>
-              <strong>Email:</strong> <span>info@example.com</span><br>
+              <strong>Phone:</strong> <span> +91 9810120073 ,</span><span> +91 9310557655 ,</span><span> +91 9310578383</span><br>
+              <strong>Email:</strong> <span>movikev9@gmail.com</span><br>
             </p>
           </div>
         </div>
@@ -31,7 +31,7 @@
           <div>
             <h4>Opening Hours</h4>
             <p>
-              <strong>Mon-Sat:</strong> <span>11AM - 23PM</span><br>
+              <strong>Mon-Sat:</strong> <span>11:00 AM – 07:00 PM</span><br>
               <strong>Sunday</strong>: <span>Closed</span>
             </p>
           </div>
