@@ -14,6 +14,39 @@ $stmt = $pdo->prepare("
 
 $stmt->execute([$_SESSION['user_id']]);
 $membership = $stmt->fetch();
+
+// ✅ Property usage tracker
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM properties WHERE user_id=?");
+$stmt->execute([$_SESSION['user_id']]);
+$used_properties = $stmt->fetchColumn();
+
+// Default limits (Listing plan)
+$property_limit = 2;
+
+if ($membership) {
+    switch (strtolower($membership['plan_name'])) {
+        case 'basic':
+            $property_limit = 5;
+            break;
+
+        case 'silver':
+            $property_limit = 10;
+            break;
+
+        case 'gold':
+            $property_limit = 20;
+            break;
+
+        case 'platinum':
+            $property_limit = 999999; // Unlimited
+            break;
+    }
+}
+
+// Percentage (for progress bar)
+$usage_percent = ($property_limit > 0) 
+    ? min(100, ($used_properties / $property_limit) * 100) 
+    : 0;
 ?>
 
 
@@ -114,6 +147,26 @@ $membership = $stmt->fetch();
                     <p class="text-secondary small mb-4">Upgrade to list properties and access verified leads.</p>
                     <a href='membership.php' class="btn btn-warning w-100 fw-bold py-2 rounded-pill">Get Premium Access</a>
                 <?php endif; ?>
+                <!-- ✅ Property Usage Tracker -->
+                <div class="mt-3">
+                    <p class="small mb-1 text-secondary">
+                        Property Usage: 
+                        <b><?= $used_properties ?> / <?= ($property_limit >= 999999 ? 'Unlimited' : $property_limit) ?></b>
+                    </p>
+
+                    <div class="progress" style="height:8px; border-radius:10px;">
+                        <div class="progress-bar 
+                            <?= $usage_percent > 80 ? 'bg-danger' : ($usage_percent > 50 ? 'bg-warning' : 'bg-success') ?>" 
+                            style="width: <?= $usage_percent ?>%">
+                        </div>
+                    </div>
+
+                    <?php if ($property_limit != 999999 && $used_properties >= $property_limit): ?>
+                        <small class="text-danger fw-bold">
+                            Limit reached — upgrade your plan
+                        </small>
+                    <?php endif; ?>
+                </div>
                 
                 <hr class="my-4 opacity-50">
                 <div class="d-flex align-items-center">
@@ -156,10 +209,16 @@ $membership = $stmt->fetch();
                         <span>Inbound Requests</span>
                     </a>
                 </div>
-                <div class="col-12">
-                    <a href="profile.php" class="btn-action-card d-flex align-items-center justify-content-center py-4">
-                        <i class="bi bi-person-gear me-3 mb-0 text-secondary" style="font-size: 1.5rem;"></i>
-                        <span>Account & Security Settings</span>
+                <div class="col-sm-6">
+                    <a href="all_users.php" class="btn-action-card">
+                        <i class="bi bi-person "></i>
+                        <span>Browse Members</span>
+                    </a>
+                </div>
+                <div class="col-sm-6">
+                    <a href="profile.php" class="btn-action-card ">
+                        <i class="bi bi-person-gear"></i>
+                        <span>Account Settings</span>
                     </a>
                 </div>
             </div>

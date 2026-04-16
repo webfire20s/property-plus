@@ -122,7 +122,7 @@ $categories = [
                 <div class="col-md-2">
                     <select name="purpose" class="form-select border-0 bg-light">
                         <option value="">Purpose</option>
-                        <option value="buy" <?= (($_GET['purpose'] ?? '')=='buy')?'selected':'' ?>>Buy</option>
+                        <option value="lease" <?= (($_GET['purpose'] ?? '')=='lease')?'selected':'' ?>>Lease</option>
                         <option value="sell" <?= (($_GET['purpose'] ?? '')=='sell')?'selected':'' ?>>Sell</option>
                         <option value="rent" <?= (($_GET['purpose'] ?? '')=='rent')?'selected':'' ?>>Rent</option>
                     </select>
@@ -150,78 +150,127 @@ $categories = [
         <div class="row g-4">
             <?php foreach ($properties as $p): ?>
                 <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="prop-card h-100 shadow-sm" style="background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0;">
-                        
-                        <div class="prop-img-wrapper" style="position: relative;">
-                            <span class="badge" style="position: absolute; top: 15px; right: 15px; background: #2eca6a; color: #fff; padding: 5px 12px; z-index: 2;">
-                                <?= ucfirst($p['purpose'] ?? 'Listing') ?>
-                            </span>
-                            <?php if($p['status']=='approved'): ?>
-                                <span class="badge bg-success">Verified</span>
-                            <?php endif; ?>
+                    <a href="property_details.php?id=<?= $p['id'] ?>" style="text-decoration:none; color:inherit;">
+                        <div class="prop-card h-100 shadow-sm" style="background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0;">
                             
-                            <?php 
-                            $imgStmt = $pdo->prepare("SELECT image_path FROM property_images WHERE property_id=? LIMIT 1");
-                            $imgStmt->execute([$p['id']]);
-                            $image = $imgStmt->fetchColumn();
+                            <div class="prop-img-wrapper" style="position: relative;">
+                                <span class="badge" style="position: absolute; top: 15px; right: 15px; background: #2eca6a; color: #fff; padding: 5px 12px; z-index: 2;">
+                                    <?= ucfirst($p['purpose'] ?? 'Listing') ?>
+                                </span>
+                                <?php if($p['status']=='approved'): ?>
+                                    <span class="badge bg-success">Verified</span>
+                                <?php endif; ?>
+                                
+                                <?php 
+                                $imgStmt = $pdo->prepare("SELECT image_path FROM property_images WHERE property_id=?");
+                                $imgStmt->execute([$p['id']]);
+                                $images = $imgStmt->fetchAll(PDO::FETCH_COLUMN);
 
-                            if ($image): ?>
-                                <img src='uploads/<?= $image ?>' style="width: 100%; height: 240px; object-fit: cover;" alt="Property">
-                            <?php else: ?>
-                                <div style="height: 240px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
-                                    <i class="fa-solid fa-house-chimney fa-3x"></i>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="prop-details" style="padding: 20px;">
-                            <div class="prop-price" style="font-size: 1.4rem; font-weight: 800; color: #2eca6a;">₹<?= number_format($p['price']) ?></div>
-                            <div class="prop-location" style="color: #64748b; font-size: 0.9rem; margin-bottom: 10px;">
-                                <i class="fa-solid fa-location-dot me-1 text-danger"></i> <?= htmlspecialchars($p['city']) ?>
-                            </div>
-                            <h3 class="prop-title" style="font-size: 1.1rem; font-weight: 700; min-height: 50px;"><?= htmlspecialchars($p['title']) ?></h3>
-                            
-                            <div class="prop-meta border-top pt-3 mt-2" style="display: flex; gap: 15px; font-size: 0.85rem; color: #64748b;">
-                                <span><i class="fa-solid fa-layer-group me-1"></i> <?= $cat ?></span>
-                                <span><i class="fa-solid fa-ruler-combined me-1"></i> <?= $p['area'] ?? '-' ?> <?= $p['area_unit'] ?? '' ?></span>
-                            </div>
-
-                            <div class="access-box pt-3 mt-3">
-                                <?php if (isset($_SESSION['user_id'])): ?>
-                                    <?php
-                                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM contact_views WHERE user_id=?");
-                                    $stmt->execute([$_SESSION['user_id']]);
-                                    $viewCount = $stmt->fetchColumn();
-
-                                    $stmt2 = $pdo->prepare("SELECT COUNT(*) FROM contact_requests WHERE sender_id=?");
-                                    $stmt2->execute([$_SESSION['user_id']]);
-                                    $requestCount = $stmt2->fetchColumn();
-                                    ?>
-
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <?php if ($viewCount < 2): ?>
-                                                <a href="view_contact.php?id=<?= $p['id'] ?>" class="btn btn-outline-dark btn-sm w-100">View Contact</a>
-                                            <?php else: ?>
-                                                <span class="badge bg-light text-danger w-100 py-2">Limit Reached</span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="col-6">
-                                            <?php if ($requestCount < 5): ?>
-                                                <a href="send_request.php?id=<?= $p['id'] ?>" class="btn btn-dark btn-sm w-100">Contact Owner</a>
-                                            <?php else: ?>
-                                                <span class="badge bg-light text-danger w-100 py-2">Limit Reached</span>
-                                            <?php endif; ?>
-                                        </div>
+                                if (!empty($images)): ?>
+                                <div id="carousel<?= $p['id'] ?>" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        <?php foreach ($images as $index => $img): ?>
+                                            <div class="carousel-item <?= $index == 0 ? 'active' : '' ?>">
+                                                <img src="uploads/<?= $img ?>" 
+                                                    style="width:100%; height:240px; object-fit:cover;">
+                                            </div>
+                                        <?php endforeach; ?>
                                     </div>
+                                </div>
                                 <?php else: ?>
-                                    <a href="auth/login.php" class="btn btn-outline-success btn-sm w-100">
-                                        <i class="fa-solid fa-lock me-1"></i> Login to View
-                                    </a>
+                                    <div style="height: 240px; background: #f1f5f9; display:flex; align-items:center; justify-content:center;">
+                                        <i class="fa-solid fa-house-chimney fa-3x"></i>
+                                    </div>
                                 <?php endif; ?>
                             </div>
+
+                            <div class="prop-details" style="padding: 20px;">
+                                <div class="prop-price" style="font-size: 1.4rem; font-weight: 800; color: #2eca6a;">₹<?= number_format($p['price']) ?></div>
+                                <div class="prop-location" style="color: #64748b; font-size: 0.9rem; margin-bottom: 10px;">
+                                    <i class="fa-solid fa-location-dot me-1 text-danger"></i> <?= htmlspecialchars($p['city']) ?>
+                                </div>
+                                <h3 class="prop-title" style="font-size: 1.1rem; font-weight: 700; min-height: 50px;"><?= htmlspecialchars($p['title']) ?></h3>
+                                
+                                <div class="prop-meta border-top pt-3 mt-2" style="display: flex; gap: 15px; font-size: 0.85rem; color: #64748b;">
+                                    <span><i class="fa-solid fa-layer-group me-1"></i> <?= $cat ?></span>
+                                    <span><i class="fa-solid fa-ruler-combined me-1"></i> <?= $p['area'] ?? '-' ?> <?= $p['area_unit'] ?? '' ?></span>
+                                </div>
+
+                                <div class="access-box pt-3 mt-3">
+                                    <?php if (isset($_SESSION['user_id'])): ?>
+                                        <?php
+                                        // Get counts
+                                        $stmt = $pdo->prepare("SELECT COUNT(*) FROM contact_views WHERE user_id=?");
+                                        $stmt->execute([$_SESSION['user_id']]);
+                                        $viewCount = $stmt->fetchColumn();
+
+                                        $stmt2 = $pdo->prepare("SELECT COUNT(*) FROM contact_requests WHERE sender_id=?");
+                                        $stmt2->execute([$_SESSION['user_id']]);
+                                        $requestCount = $stmt2->fetchColumn();
+
+                                        // Get user plan
+                                        $stmt3 = $pdo->prepare("
+                                            SELECT m.name 
+                                            FROM user_memberships um
+                                            JOIN memberships m ON um.membership_id = m.id
+                                            WHERE um.user_id=? AND um.status='active'
+                                            ORDER BY um.id DESC LIMIT 1
+                                        ");
+                                        $stmt3->execute([$_SESSION['user_id']]);
+                                        $userPlan = strtolower($stmt3->fetchColumn() ?? 'listing');
+
+                                        // Define limits
+                                        $view_limit = 2;
+                                        $request_limit = 2;
+
+                                        switch ($userPlan) {
+                                            case 'basic':
+                                                $view_limit = 10;
+                                                $request_limit = 10;
+                                                break;
+
+                                            case 'silver':
+                                                $view_limit = 25;
+                                                $request_limit = 20;
+                                                break;
+
+                                            case 'gold':
+                                                $view_limit = 50;
+                                                $request_limit = 40;
+                                                break;
+
+                                            case 'platinum':
+                                                $view_limit = 999;
+                                                $request_limit = 999;
+                                                break;
+                                        }
+                                        ?>
+
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <?php if ($viewCount < $view_limit): ?>
+                                                    <a href="view_contact.php?id=<?= $p['id'] ?>" class="btn btn-outline-dark btn-sm w-100">View Contact</a>
+                                                <?php else: ?>
+                                                    <span class="badge bg-light text-danger w-100 py-2">Limit Reached</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="col-6">
+                                                <?php if ($requestCount < $request_limit): ?>
+                                                    <a href="send_request.php?id=<?= $p['id'] ?>" class="btn btn-dark btn-sm w-100">Contact Owner</a>
+                                                <?php else: ?>
+                                                    <span class="badge bg-light text-danger w-100 py-2">Limit Reached</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <a href="auth/login.php" class="btn btn-outline-success btn-sm w-100">
+                                            <i class="fa-solid fa-lock me-1"></i> Login to View
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             <?php endforeach; ?>
         </div>

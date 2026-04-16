@@ -18,7 +18,7 @@ $membership = $stmt->fetch();
 $plan_name = 'Listing';
 $image_limit = 0;
 $allow_video = false;
-$property_limit = 999; // unlimited text listings
+$property_limit = 2; // unlimited text listings
 
 // ✅ If user has paid membership → override defaults
 if ($membership) {
@@ -33,11 +33,11 @@ if ($membership) {
             break;
 
         case 'silver':
-            $image_limit = 10;
+            $image_limit = 5;
             break;
 
         case 'gold':
-            $image_limit = 20;
+            $image_limit = 5;
             break;
 
         case 'platinum':
@@ -168,6 +168,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM properties WHERE user_id = ?");
+$stmt->execute([$_SESSION['user_id']]);
+$current_count = $stmt->fetchColumn();
 
 $categories = [
     "Builder Floors",
@@ -303,6 +306,20 @@ $categories = [
 </style>
 
 <div class="container form-container" data-aos="fade-up">
+    <div class="alert alert-light border mb-4">
+        <strong>Your Plan:</strong> <?= htmlspecialchars($plan_name) ?><br>
+
+        <?php if ($property_limit >= 9999): ?>
+            <span class="text-success">Unlimited listings available</span>
+        <?php else: ?>
+            You have used <b><?= $current_count ?></b> out of 
+            <b><?= $property_limit ?></b> properties
+        <?php endif; ?>
+
+        <?php if ($current_count >= $property_limit): ?>
+            <br><span class="text-danger">Limit reached. Upgrade to add more.</span>
+        <?php endif; ?>
+    </div>
     <div class="upload-card">
         <div class="mb-5 text-center">
             <h2 class="fw-bold" style="color: #2b2b2b;">List Your Property</h2>

@@ -66,6 +66,7 @@ if ($host == 'localhost') {
           <?php if(isset($_SESSION['user_id'])): ?>
             <li><a href="<?php echo $base_url; ?>user/dashboard.php">Dashboard</a></li>
             <li><a href="<?php echo $base_url; ?>user/my_properties.php">My Properties</a></li>
+            <li><a href="<?php echo $base_url; ?>user/my_requests.php">My Requests</a></li>
             <li><a href="<?php echo $base_url; ?>user/requests.php">Requests</a></li>
             <li><a href="<?php echo $base_url; ?>user/membership.php">Membership</a></li>
             <li><a href="<?php echo $base_url; ?>user/add_property.php" class="btn-get-started">Add Property</a></li>

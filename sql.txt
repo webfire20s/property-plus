@@ -209,3 +209,14 @@ ADD membership_plan INT NULL,
 ADD membership_status VARCHAR(20) DEFAULT 'inactive';
 
 ALTER TABLE payment_screenshots ADD amount DECIMAL(10,2);
+
+========================================================================================================================================================================================================================================
+
+date = 16 april 
+
+
+UPDATE memberships SET property_limit = 2 WHERE name = 'Listing';
+UPDATE memberships SET property_limit = 5 WHERE name = 'Basic';
+UPDATE memberships SET property_limit = 10 WHERE name = 'Silver';
+UPDATE memberships SET property_limit = 20 WHERE name = 'Gold';
+UPDATE memberships SET property_limit = 9999 WHERE name = 'Platinum';
