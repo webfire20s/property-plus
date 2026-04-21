@@ -3,14 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Automatic path detection for XAMPP vs cPanel
-$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-$host = $_SERVER['HTTP_HOST'];
-if ($host == 'localhost') {
-    $base_url = $protocol . "://" . $host . "/realestate/";
-} else {
-    $base_url = $protocol . "://" . $host . "/";
-}
+// Use BASE_URL from .env
+$base_url = $_ENV['BASE_URL'] ?? '/';
 ?>
 <!DOCTYPE html>
 <html lang="en">

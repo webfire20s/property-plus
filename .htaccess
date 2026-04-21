@@ -1,0 +1,15 @@
+RewriteEngine On
+RewriteBase /realestate/
+
+# Force the server to check if the file exists
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# If it doesn't exist, handle the routing
+RewriteRule . /property-plus/index.php [L]
+
+# Prevent access to .env file
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>

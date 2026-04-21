@@ -24,8 +24,9 @@ if (!$type || !$amount || $amount <= 0) {
 }
 
 // 🔑 Razorpay Keys
-$key_id = "rzp_live_ScvB0Ti18LUIK2";
-$key_secret = "EQPJZ3hP1YTnQrfprAr1W7dg";
+require '../config/razorpay.php';
+$key_id = RAZORPAY_KEY_ID;
+$key_secret = RAZORPAY_KEY_SECRET;
 
 try {
 

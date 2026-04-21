@@ -175,20 +175,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <?php if (!$payment || $payment['status']=='rejected'): ?>
 
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-4">
-                    <label class="form-label fw-bold text-dark small">Upload Payment Confirmation</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-camera text-muted"></i></span>
-                        <input type="file" name="screenshot" class="form-control border-start-0 shadow-none" required>
-                    </div>
-                    <div class="form-text mt-2">Upload a clear screenshot of the transaction (JPG/PNG).</div>
+            <div class="d-grid gap-3 mb-4">
+                <!-- Razorpay Option -->
+                <button type="button" onclick="payWithRazorpay()" class="btn-submit w-100" style="background: #3399cc;">
+                    Pay Online (Instant) <i class="fa-solid fa-bolt ms-2"></i>
+                </button>
+
+                <div class="text-center">
+                    <span class="text-muted small fw-bold">OR UPLOAD SCREENSHOT</span>
                 </div>
 
-                <button class="btn-submit w-100 shadow-sm">
-                    Submit Payment Details <i class="fa-solid fa-arrow-right ms-2"></i>
-                </button>
-            </form>
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark small">Upload Payment Confirmation</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-camera text-muted"></i></span>
+                            <input type="file" name="screenshot" class="form-control border-start-0 shadow-none" required>
+                        </div>
+                        <div class="form-text mt-2">Upload a clear screenshot of the transaction (JPG/PNG).</div>
+                    </div>
+
+                    <button class="btn-submit w-100 shadow-sm">
+                        Submit QR Payment <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </button>
+                </form>
+            </div>
 
         <?php else: ?>
 
@@ -202,6 +213,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </div>
 </div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+function payWithRazorpay() {
+    const amount = 1000;
+    
+    fetch('create_order.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `amount=${amount}&type=registration`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            var options = {
+                "key": data.key,
+                "amount": data.amount * 100,
+                "currency": "INR",
+                "name": "Property Plus",
+                "description": "Partner Registration Fee",
+                "order_id": data.order_id,
+                "handler": function (response) {
+                    fetch('verify_payment.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(response)
+                    })
+                    .then(res => res.text())
+                    .then(res => {
+                        if (res.trim() === "success") {
+                            window.location.href = 'dashboard.php?registration=success';
+                        } else {
+                            alert("Payment verification failed: " + res);
+                        }
+                    });
+                },
+                "theme": { "color": "#2eca6a" }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+        } else {
+            alert("Error: " + data.error);
+        }
+    });
+}
+</script>
 
 </body>
 </html>

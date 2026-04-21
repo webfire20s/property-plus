@@ -27,19 +27,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!preg_match("/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/", $gst)) { die("Invalid GST number"); }
     }
 
-    $stmt = $pdo->prepare("INSERT INTO users (phone, password, business_name, state, district, rera_number, gst_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'active')");
+    $stmt = $pdo->prepare("INSERT INTO users (phone, password, business_name, state, district, rera_number, gst_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')");
     $stmt->execute([$phone, $password, $business_name, $state, $district, $rera, $gst]);
 
     $user_id = $pdo->lastInsertId();
 
-    // ✅ Login user immediately
+    // ✅ Set sessions for payment
     $_SESSION['user_id'] = $user_id;
+    $_SESSION['temp_user_id'] = $user_id;
 
     // Cleanup OTP session
     unset($_SESSION['otp_verified'], $_SESSION['otp'], $_SESSION['otp_phone']);
 
-    // ✅ Redirect directly to dashboard
-    header("Location: ../user/dashboard.php");
+    // ✅ Redirect to registration payment
+    header("Location: ../user/registration_payment.php");
     exit;
 }
 ?>
@@ -250,10 +251,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input name="password" type="password" class="form-control" placeholder="*********" required>
                     </div>
 
-                    <!-- <div class="p-3 info-box rounded-3 small mb-4">
+                    <div class="p-3 info-box rounded-3 small mb-4">
                         <i class="fa-solid fa-shield-halved me-2"></i> 
                         Registration requires a one-time activation fee of <b>₹1,000</b> to verify your agency status.
-                    </div> -->
+                    </div>
 
                     <button type="submit" class="btn-register shadow-sm">
                         Confirm & Proceed to Payment

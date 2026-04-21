@@ -17,8 +17,9 @@ if (
     exit;
 }
 
-$key_id = "rzp_live_ScvB0Ti18LUIK2";
-$key_secret = "EQPJZ3hP1YTnQrfprAr1W7dg";
+require '../config/razorpay.php';
+$key_id = RAZORPAY_KEY_ID;
+$key_secret = RAZORPAY_KEY_SECRET;
 
 $api = new Api($key_id, $key_secret);
 
@@ -58,23 +59,34 @@ try {
 
         $pdo->prepare("
             UPDATE users 
-            SET is_registered = 1 
+            SET status = 'active' 
             WHERE id = ?
         ")->execute([$payment['user_id']]);
 
     } elseif ($payment['type'] === 'membership') {
 
-        // Example: 1 year validity
         $expiry = date('Y-m-d', strtotime('+1 year'));
+        $today = date('Y-m-d');
 
+        // 1. Update users table
         $pdo->prepare("
             UPDATE users 
-            SET membership_plan = ?, membership_expiry = ?
+            SET membership_plan = ?, membership_status = 'active'
             WHERE id = ?
         ")->execute([
             $payment['plan_id'],
-            $expiry,
             $payment['user_id']
+        ]);
+
+        // 2. Insert/Update user_memberships table
+        $pdo->prepare("
+            INSERT INTO user_memberships (user_id, membership_id, start_date, expiry_date, status)
+            VALUES (?, ?, ?, ?, 'active')
+        ")->execute([
+            $payment['user_id'],
+            $payment['plan_id'],
+            $today,
+            $expiry
         ]);
     }
 

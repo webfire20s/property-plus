@@ -15,3 +15,8 @@ if ($status == 'blocked') {
     session_destroy();
     die("Your account is blocked");
 }
+
+if ($status == 'pending' && basename($_SERVER['PHP_SELF']) != 'registration_payment.php') {
+    header("Location: registration_payment.php");
+    exit;
+}

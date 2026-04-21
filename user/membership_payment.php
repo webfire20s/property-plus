@@ -209,16 +209,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <?php if (!$payment || $payment['status']=='rejected'): ?>
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-4">
-                    <label class="form-label fw-bold text-dark small">Upload Payment Confirmation</label>
-                    <input type="file" name="screenshot" class="form-control" required>
-                    <div class="form-text mt-2 small">Please upload a clear screenshot of the successful transaction.</div>
-                </div>
-                <button type="submit" class="btn-pay w-100">
-                    Submit Payment <i class="fa-solid fa-paper-plane ms-2"></i>
+            <div class="d-grid gap-3">
+                <!-- Razorpay Option -->
+                <button type="button" onclick="payWithRazorpay()" class="btn-pay w-100" style="background: #3399cc;">
+                    Pay Online (Instant) <i class="fa-solid fa-bolt ms-2"></i>
                 </button>
-            </form>
+
+                <div class="text-center my-2">
+                    <span class="text-muted small">OR</span>
+                </div>
+
+                <!-- Existing QR Option -->
+                <form method="POST" enctype="multipart/form-data" id="qrForm">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark small">Upload Payment Confirmation (QR/UPI)</label>
+                        <input type="file" name="screenshot" class="form-control" required>
+                        <div class="form-text mt-2 small">Please upload a clear screenshot of the successful transaction.</div>
+                    </div>
+                    <button type="submit" class="btn-pay w-100">
+                        Submit QR Payment <i class="fa-solid fa-paper-plane ms-2"></i>
+                    </button>
+                </form>
+            </div>
         <?php else: ?>
 
             <?php if ($payment['status'] == 'pending'): ?>
@@ -240,6 +252,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </div>
 </div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+function payWithRazorpay() {
+    const amount = <?= $plan['price'] ?>;
+    const plan_id = <?= $plan['id'] ?>;
+    
+    fetch('create_order.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `amount=${amount}&type=membership&plan_id=${plan_id}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            var options = {
+                "key": data.key,
+                "amount": data.amount * 100,
+                "currency": "INR",
+                "name": "Property Plus",
+                "description": "Membership Plan: <?= htmlspecialchars($plan['name']) ?>",
+                "order_id": data.order_id,
+                "handler": function (response) {
+                    fetch('verify_payment.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(response)
+                    })
+                    .then(res => res.text())
+                    .then(res => {
+                        if (res.trim() === "success") {
+                            window.location.href = 'dashboard.php?payment=success';
+                        } else {
+                            alert("Payment verification failed: " + res);
+                        }
+                    });
+                },
+                "theme": { "color": "#2eca6a" }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+        } else {
+            alert("Error: " + data.error);
+        }
+    });
+}
+</script>
 
 </body>
 </html>
