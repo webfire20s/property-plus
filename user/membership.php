@@ -154,7 +154,7 @@ $plans = $stmt->fetchAll();
             'basic' => [
                 'Browse properties',
                 'Add property',
-                'Upload up to 5 images',
+                'Upload up to 5 properties',
                 'Contact users',
                 'Medium visibility',
                 'Document verification'
@@ -162,7 +162,7 @@ $plans = $stmt->fetchAll();
             'silver' => [
                 'Browse properties',
                 'Add property',
-                'Upload up to 10 images',
+                'Upload up to 10 properties',
                 'Contact users',
                 'Medium+ visibility',
                 'Document verification'
@@ -170,7 +170,7 @@ $plans = $stmt->fetchAll();
             'gold' => [
                 'Browse properties',
                 'Add property',
-                'Upload up to 20 images',
+                'Upload up to 20 properties',
                 'Contact users',
                 'High visibility',
                 'Document verification'
@@ -178,7 +178,7 @@ $plans = $stmt->fetchAll();
             'platinum' => [
                 'Browse properties',
                 'Add property',
-                'Unlimited images',
+                'Unlimited properties',
                 'Video upload enabled',
                 'Premium visibility',
                 'Document verification'
