@@ -56,6 +56,9 @@ $base_url = $_ENV['BASE_URL'] ?? '/';
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="<?php echo $base_url; ?>index.php">Browse</a></li>
+          <?php if (!isset($_SESSION['user_id'])): ?>
+            <li><a href="<?php echo $base_url; ?>memberships.php">Memberships</a></li>
+          <?php endif; ?>
           
           <?php if(isset($_SESSION['user_id'])): ?>
             <li><a href="<?php echo $base_url; ?>user/dashboard.php">Dashboard</a></li>
