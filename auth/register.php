@@ -5,46 +5,91 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Logic remains untouched
+$error = "";
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_SESSION['otp_verified']) || $_SESSION['otp_verified'] !== true) {
-        die("<div class='alert alert-danger'>Please verify OTP first</div>");
-    }
 
-    $phone = $_POST['phone'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $business_name = $_POST['business_name'];
-    $state = $_POST['state'];
-    $district = $_POST['district'];
-    $rera = $_POST['rera'];
-    $gst = $_POST['gst'];
+    try {
 
-    if (!empty($gst)) {
-        if (!preg_match("/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/", $gst)) {
-            die("Invalid GST number");
+        // ✅ OTP CHECK
+        if (!isset($_SESSION['otp_verified']) || $_SESSION['otp_verified'] !== true) {
+            throw new Exception("Please verify OTP first");
+        }
+
+        // ✅ SAFE INPUTS
+        $phone = trim($_POST['phone'] ?? '');
+        $password_raw = $_POST['password'] ?? '';
+        $business_name = trim($_POST['business_name'] ?? '');
+        $state = trim($_POST['state'] ?? '');
+        $district = trim($_POST['district'] ?? '');
+        $rera = trim($_POST['rera'] ?? '');
+        $gst = trim($_POST['gst'] ?? '');
+
+        // ✅ VALIDATIONS
+        if (!preg_match('/^[0-9]{10}$/', $phone)) {
+            throw new Exception("Invalid phone number");
+        }
+
+        if (strlen($password_raw) < 4) {
+            throw new Exception("Password must be at least 4 characters");
+        }
+
+        if (empty($business_name)) {
+            throw new Exception("Business name is required");
+        }
+
+        if (empty($state) || empty($district)) {
+            throw new Exception("State and District are required");
+        }
+
+        if (!empty($gst)) {
+            if (!preg_match("/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/", $gst)) {
+                throw new Exception("Invalid GST number");
+            }
+        }
+
+        // ✅ DUPLICATE CHECK (CRITICAL FIX)
+        $check = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
+        $check->execute([$phone]);
+
+        if ($check->rowCount() > 0) {
+            throw new Exception("This phone number is already registered. Please login.");
+        }
+
+        // ✅ HASH PASSWORD
+        $password = password_hash($password_raw, PASSWORD_DEFAULT);
+
+        // ✅ INSERT USER
+        $stmt = $pdo->prepare("
+            INSERT INTO users 
+            (phone, password, business_name, state, district, rera_number, gst_number, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+        ");
+
+        $stmt->execute([$phone, $password, $business_name, $state, $district, $rera, $gst]);
+
+        $user_id = $pdo->lastInsertId();
+
+        // ✅ AUTO LOGIN
+        $_SESSION['user_id'] = $user_id;
+
+        // CLEAN OTP SESSION
+        unset($_SESSION['otp_verified'], $_SESSION['otp'], $_SESSION['otp_phone']);
+
+        header("Location: ../user/dashboard.php");
+        exit;
+
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    } catch (PDOException $e) {
+
+        // ✅ FINAL SAFETY NET (handles race condition duplicates)
+        if ($e->errorInfo[1] == 1062) {
+            $error = "This phone number is already registered.";
+        } else {
+            $error = "Something went wrong. Please try again.";
         }
     }
-
-    // ✅ Direct active user (NO PAYMENT)
-    $stmt = $pdo->prepare("
-        INSERT INTO users 
-        (phone, password, business_name, state, district, rera_number, gst_number, status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-    ");
-
-    $stmt->execute([$phone, $password, $business_name, $state, $district, $rera, $gst]);
-
-    $user_id = $pdo->lastInsertId();
-
-    // ✅ Auto login
-    $_SESSION['user_id'] = $user_id;
-
-    // Cleanup OTP session
-    unset($_SESSION['otp_verified'], $_SESSION['otp'], $_SESSION['otp_phone']);
-
-    // ✅ Go to dashboard directly
-    header("Location: ../user/dashboard.php");
-    exit;
 }
 ?>
 
@@ -191,6 +236,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="reg-card">
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-danger text-center">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
                 <form method="POST" id="registerForm">
                     <div class="step-title">
                         <h5 class="fw-bold mb-0">01. Identity Verification</h5>
