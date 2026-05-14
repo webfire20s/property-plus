@@ -15,7 +15,7 @@ $base_url = $_ENV['BASE_URL'] ?? '/';
   <title>PropertyPlus | Elite Real Estate</title>
   
   <link href="<?php echo $base_url; ?>assets/logo.png" rel="icon">
-  <link href="<?php echo $base_url; ?>assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="<?php echo $base_url; ?>assets/logo.png" rel="apple-touch-icon">
 
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>

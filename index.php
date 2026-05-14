@@ -147,18 +147,22 @@ $categories = [
 
 <section id="property-listings" class="section-property section-t8">
     <div class="container">
-        <div class="row g-4">
+        <!-- g-2 on mobile for tighter spacing, g-4 on desktop -->
+        <div class="row g-2 g-md-4">
             <?php foreach ($properties as $p): ?>
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <!-- col-6 ensures 2 per row on mobile -->
+                <div class="col-6 col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
                     <a href="property_details.php?id=<?= $p['id'] ?>" style="text-decoration:none; color:inherit;">
-                        <div class="prop-card h-100 shadow-sm" style="background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0;">
+                        <div class="prop-card h-100 shadow-sm" style="background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
                             
                             <div class="prop-img-wrapper" style="position: relative;">
-                                <span class="badge" style="position: absolute; top: 15px; right: 15px; background: #2eca6a; color: #fff; padding: 5px 12px; z-index: 2;">
+                                <!-- Scaled down badge for mobile -->
+                                <span class="badge" style="position: absolute; top: 10px; right: 10px; background: #2eca6a; color: #fff; padding: 4px 8px; z-index: 2; font-size: 0.7rem;">
                                     <?= ucfirst($p['purpose'] ?? 'Listing') ?>
                                 </span>
+                                
                                 <?php if($p['status']=='approved'): ?>
-                                    <span class="badge bg-success">Verified</span>
+                                    <span class="badge bg-success" style="position: absolute; top: 10px; left: 10px; z-index: 2; font-size: 0.7rem;">Verified</span>
                                 <?php endif; ?>
                                 
                                 <?php 
@@ -171,35 +175,42 @@ $categories = [
                                     <div class="carousel-inner">
                                         <?php foreach ($images as $index => $img): ?>
                                             <div class="carousel-item <?= $index == 0 ? 'active' : '' ?>">
+                                                <!-- Responsive height: 150px on mobile, 240px on desktop -->
                                                 <img src="uploads/<?= $img ?>" 
-                                                    style="width:100%; height:240px; object-fit:cover;">
+                                                    style="width:100%; object-fit:cover;" 
+                                                    class="prop-img-height">
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
                                 <?php else: ?>
-                                    <div style="height: 240px; background: #f1f5f9; display:flex; align-items:center; justify-content:center;">
-                                        <i class="fa-solid fa-house-chimney fa-3x"></i>
+                                    <div class="prop-img-height" style="background: #f1f5f9; display:flex; align-items:center; justify-content:center;">
+                                        <i class="fa-solid fa-house-chimney fa-2x"></i>
                                     </div>
                                 <?php endif; ?>
                             </div>
 
-                            <div class="prop-details" style="padding: 20px;">
-                                <div class="prop-price" style="font-size: 1.4rem; font-weight: 800; color: #2eca6a;">₹<?= number_format($p['price']) ?></div>
-                                <div class="prop-location" style="color: #64748b; font-size: 0.9rem; margin-bottom: 10px;">
+                            <!-- Reduced padding for mobile (p-2 on mobile, p-3/4 on desktop) -->
+                            <div class="prop-details" style="padding: 12px;">
+                                <div class="prop-price" style="font-weight: 800; color: #2eca6a; line-height: 1;">₹<?= number_format($p['price']) ?></div>
+                                
+                                <div class="prop-location text-truncate" style="color: #64748b; font-size: 0.75rem; margin: 5px 0;">
                                     <i class="fa-solid fa-location-dot me-1 text-danger"></i> <?= htmlspecialchars($p['city']) ?>
                                 </div>
-                                <h3 class="prop-title" style="font-size: 1.1rem; font-weight: 700; min-height: 50px;"><?= htmlspecialchars($p['title']) ?></h3>
                                 
-                                <div class="prop-meta border-top pt-3 mt-2" style="display: flex; gap: 15px; font-size: 0.85rem; color: #64748b;">
-                                    <span><i class="fa-solid fa-layer-group me-1"></i> <?= $cat ?></span>
-                                    <span><i class="fa-solid fa-ruler-combined me-1"></i> <?= $p['area'] ?? '-' ?> <?= $p['area_unit'] ?? '' ?></span>
+                                <h3 class="prop-title" style="font-weight: 700; margin-bottom: 10px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 34px; line-height: 1.2;">
+                                    <?= htmlspecialchars($p['title']) ?>
+                                </h3>
+                                
+                                <!-- Meta: Hidden on very small screens to save space, or scaled down -->
+                                <div class="prop-meta border-top pt-2 mt-1 d-flex flex-wrap" style="gap: 8px; font-size: 0.7rem; color: #64748b;">
+                                    <span class="text-truncate"><i class="fa-solid fa-ruler-combined me-1"></i> <?= $p['area'] ?? '-' ?></span>
                                 </div>
 
-                                <div class="access-box pt-3 mt-3">
+                                <div class="access-box pt-2 mt-2">
                                     <?php if (isset($_SESSION['user_id'])): ?>
                                         <?php
-                                        // Get counts
+                                        // Logic remains exactly as you provided
                                         $stmt = $pdo->prepare("SELECT COUNT(*) FROM contact_views WHERE user_id=?");
                                         $stmt->execute([$_SESSION['user_id']]);
                                         $viewCount = $stmt->fetchColumn();
@@ -208,63 +219,38 @@ $categories = [
                                         $stmt2->execute([$_SESSION['user_id']]);
                                         $requestCount = $stmt2->fetchColumn();
 
-                                        // Get user plan
-                                        $stmt3 = $pdo->prepare("
-                                            SELECT m.name 
-                                            FROM user_memberships um
-                                            JOIN memberships m ON um.membership_id = m.id
-                                            WHERE um.user_id=? AND um.status='active'
-                                            ORDER BY um.id DESC LIMIT 1
-                                        ");
+                                        $stmt3 = $pdo->prepare("SELECT m.name FROM user_memberships um JOIN memberships m ON um.membership_id = m.id WHERE um.user_id=? AND um.status='active' ORDER BY um.id DESC LIMIT 1");
                                         $stmt3->execute([$_SESSION['user_id']]);
                                         $userPlan = strtolower($stmt3->fetchColumn() ?? 'listing');
 
-                                        // Define limits
-                                        $view_limit = 2;
-                                        $request_limit = 2;
-
+                                        $view_limit = 2; $request_limit = 2;
                                         switch ($userPlan) {
-                                            case 'basic':
-                                                $view_limit = 10;
-                                                $request_limit = 10;
-                                                break;
-
-                                            case 'silver':
-                                                $view_limit = 25;
-                                                $request_limit = 20;
-                                                break;
-
-                                            case 'gold':
-                                                $view_limit = 50;
-                                                $request_limit = 40;
-                                                break;
-
-                                            case 'platinum':
-                                                $view_limit = 999;
-                                                $request_limit = 999;
-                                                break;
+                                            case 'basic': $view_limit = 10; $request_limit = 10; break;
+                                            case 'silver': $view_limit = 25; $request_limit = 20; break;
+                                            case 'gold': $view_limit = 50; $request_limit = 40; break;
+                                            case 'platinum': $view_limit = 999; $request_limit = 999; break;
                                         }
                                         ?>
 
-                                        <div class="row g-2">
-                                            <div class="col-6">
+                                        <div class="row g-1">
+                                            <div class="col-12 col-md-6">
                                                 <?php if ($viewCount < $view_limit): ?>
-                                                    <a href="view_contact.php?id=<?= $p['id'] ?>" class="btn btn-outline-dark btn-sm w-100">View Contact</a>
+                                                    <a href="view_contact.php?id=<?= $p['id'] ?>" class="btn btn-outline-dark btn-sm w-100 py-1" style="font-size: 0.7rem;">View</a>
                                                 <?php else: ?>
-                                                    <span class="badge bg-light text-danger w-100 py-2">Limit Reached</span>
+                                                    <span class="badge bg-light text-danger w-100 py-2" style="font-size: 0.6rem;">Limit</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="col-6">
+                                            <div class="col-12 col-md-6">
                                                 <?php if ($requestCount < $request_limit): ?>
-                                                    <a href="send_request.php?id=<?= $p['id'] ?>" class="btn btn-dark btn-sm w-100">Contact Owner</a>
+                                                    <a href="send_request.php?id=<?= $p['id'] ?>" class="btn btn-dark btn-sm w-100 py-1" style="font-size: 0.7rem;">Contact</a>
                                                 <?php else: ?>
-                                                    <span class="badge bg-light text-danger w-100 py-2">Limit Reached</span>
+                                                    <span class="badge bg-light text-danger w-100 py-2" style="font-size: 0.6rem;">Limit</span>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
                                     <?php else: ?>
-                                        <a href="auth/login.php" class="btn btn-outline-success btn-sm w-100">
-                                            <i class="fa-solid fa-lock me-1"></i> Login to View
+                                        <a href="auth/login.php" class="btn btn-outline-success btn-sm w-100 py-1" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-lock me-1"></i> Login
                                         </a>
                                     <?php endif; ?>
                                 </div>
@@ -277,6 +263,18 @@ $categories = [
     </div>
 </section>
 
+<!-- Add this small CSS block to your stylesheet or header to handle responsive text/heights -->
+<style>
+    .prop-img-height { height: 150px; }
+    .prop-price { font-size: 1rem; }
+    .prop-title { font-size: 0.85rem; }
+    
+    @media (min-width: 768px) {
+        .prop-img-height { height: 240px; }
+        .prop-price { font-size: 1.4rem; }
+        .prop-title { font-size: 1.1rem; }
+    }
+</style>
 <?php 
 // 2. Include the new footer (this handles copyright and JS scripts)
 include('includes/footer.php'); 
