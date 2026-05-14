@@ -64,8 +64,33 @@ $categories = [
 
 
 
-<div class="hero-section" style="margin-top: 90px; background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%); padding: 80px 0 150px 0; position: relative; overflow: hidden;">
-    
+<!-- Background Image CSS -->
+<style>
+    .hero-section {
+        margin-top: 90px;
+        /* Using a high-quality real estate background */
+        background-image: linear-gradient(to right, rgba(255, 255, 255, 1) 30%, rgba(255, 255, 255, 0.7) 60%, rgba(255, 255, 255, 0) 90%), 
+                          url('https://cf.bstatic.com/xdata/images/hotel/max1024x768/659933963.jpg?k=d38117fb188c0d5a55a091a75703d3b915a1ee5de4bc9758833964156351dba5&o=');
+        background-size: cover;
+        background-position: center right;
+        background-attachment: fixed; /* Parallax Effect */
+        padding: 100px 0 160px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Mobile adjustment: On small screens, we make the overlay darker so text remains readable over the image */
+    @media (max-width: 991px) {
+        .hero-section {
+            background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 100%, rgba(255, 255, 255, 0.9) 100%), 
+                              url('https://cf.bstatic.com/xdata/images/hotel/max1024x768/659933963.jpg?k=d38117fb188c0d5a55a091a75703d3b915a1ee5de4bc9758833964156351dba5&o=');
+            padding: 60px 0 120px 0;
+        }
+    }
+</style>
+
+<section class="hero-section">
+    <!-- Decorative floating icon still kept for texture -->
     <div style="position: absolute; right: -50px; bottom: 0; opacity: 0.05; pointer-events: none;">
         <i class="fa-solid fa-city" style="font-size: 300px; color: #000;"></i>
     </div>
@@ -73,31 +98,37 @@ $categories = [
     <div class="container">
         <div class="row align-items-center mb-5">
             <div class="col-lg-7" data-aos="fade-right">
-                <div class="brand-badge mb-3" style="display: inline-block; background: rgba(46, 202, 106, 0.1); color: #2eca6a; padding: 5px 15px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                <div class="brand-badge mb-3" style="display: inline-block; background: rgba(46, 202, 106, 0.15); color: #2eca6a; padding: 6px 18px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(46,202,106,0.3);">
                     <i class="fa-solid fa-house-circle-check me-2"></i>Verified Ecosystem
                 </div>
-                <h1 class="hero-title mb-3" style="font-weight: 800; font-size: 3.2rem; color: #0f172a; line-height: 1.2;">
+                
+                <h1 class="hero-title mb-3" style="font-weight: 800; font-size: 3.5rem; color: #0f172a; line-height: 1.2;">
                     A Platform <span style="color: #2eca6a;">Designed</span> for <br>Real Estate <span style="color: #fdb913;">Professionals.</span>
                 </h1>
-                <p class="text-secondary mb-4" style="font-size: 1.15rem; max-width: 600px; line-height: 1.7;">
+                
+                <p class="text-secondary mb-4" style="font-size: 1.2rem; max-width: 600px; line-height: 1.7; color: #334155 !important; font-weight: 500;">
                     Property Plus is a membership-based platform designed for builders, brokers, agents, and freelancers to connect, showcase opportunities, and operate within a verified real estate ecosystem.
                 </p>
+                
                 <div class="d-flex gap-3">
-                    <a href="auth/register.php" class="btn btn-success px-4 py-3 shadow-sm" style="background: #2eca6a; border: none; font-weight: 700; border-radius: 10px;">Register Now</a>
-                    <a href="#property-listings" class="btn btn-outline-dark px-4 py-3" style="border-radius: 10px; font-weight: 600;">Explore Listings</a>
+                    <a href="auth/register.php" class="btn btn-success px-4 py-3 shadow-lg" style="background: #2eca6a; border: none; font-weight: 700; border-radius: 12px; transition: transform 0.2s;">Register Now</a>
+                    <a href="#property-listings" class="btn btn-outline-dark px-4 py-3" style="border-radius: 12px; font-weight: 600; background: #fff;">Explore Listings</a>
                 </div>
             </div>
             
-            <div class="col-lg-5 d-none d-lg-block" data-aos="fade-left">
-                <div style="position: relative;">
-                    <img src="assets/img/hero-property.jpg" class="img-fluid" style="border-radius: 30px; box-shadow: 20px 20px 60px rgba(0,0,0,0.1); border: 8px solid #fff;" alt="Modern Building">
-                    <div style="position: absolute; bottom: -20px; left: -20px; background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-left: 5px solid #2eca6a;">
-                        <h5 class="mb-0 fw-bold">100% Verified</h5>
-                        <small class="text-muted">Trusted by Professionals</small>
+            <!-- We keep the Col-5 but leave it empty or with a small floating widget 
+                 because the background image now fills the right side visual space -->
+            <div class="col-lg-5 d-none d-lg-block">
+                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); padding: 30px; border-radius: 30px; display: inline-block; float: right;" data-aos="zoom-in">
+                    <div class="text-center">
+                        <div style="font-size: 2.5rem; font-weight: 800; color: #0f172a;">100%</div>
+                        <div style="font-weight: 700; color: #2eca6a; text-transform: uppercase; font-size: 0.8rem;">Verified Listings</div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Filter Card -->
         <div class="filter-card mx-auto shadow-lg" style="max-width: 1000px; background: #fff; padding: 30px; border-radius: 20px; margin-top: -30px; position: relative; z-index: 1000; border: 1px solid #e2e8f0;">
             <div class="mb-3 ps-1">
                 <span class="fw-bold" style="font-size: 0.9rem; color: #64748b;"><i class="fa-solid fa-sliders me-2"></i>Filter Property Search</span>
@@ -106,11 +137,11 @@ $categories = [
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text bg-light border-0"><i class="fa-solid fa-location-dot text-muted"></i></span>
-                        <input name="city" class="form-control border-0 bg-light" placeholder="Search City..." value="<?= $_GET['city'] ?? '' ?>">
+                        <input name="city" class="form-control border-0 bg-light" style="height: 45px;" placeholder="Search City..." value="<?= $_GET['city'] ?? '' ?>">
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <select name="category" class="form-select border-0 bg-light">
+                    <select name="category" class="form-select border-0 bg-light" style="height: 45px;">
                         <option value="">Category</option>
                         <?php foreach($categories as $cat): ?>
                             <option value="<?= $cat ?>" <?= (($_GET['category'] ?? '')==$cat)?'selected':'' ?>>
@@ -120,7 +151,7 @@ $categories = [
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select name="purpose" class="form-select border-0 bg-light">
+                    <select name="purpose" class="form-select border-0 bg-light" style="height: 45px;">
                         <option value="">Purpose</option>
                         <option value="lease" <?= (($_GET['purpose'] ?? '')=='lease')?'selected':'' ?>>Lease</option>
                         <option value="sell" <?= (($_GET['purpose'] ?? '')=='sell')?'selected':'' ?>>Sell</option>
@@ -128,23 +159,20 @@ $categories = [
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <input type="number" name="min_price" class="form-control border-0 bg-light" placeholder="Min ₹">
+                    <input type="number" name="min_price" class="form-control border-0 bg-light" style="height: 45px;" placeholder="Min ₹">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" name="max_price" class="form-control border-0 bg-light" placeholder="Max ₹">
+                    <input type="number" name="max_price" class="form-control border-0 bg-light" style="height: 45px;" placeholder="Max ₹">
                 </div>
                 <div class="col-md-1">
-                    <button class="btn btn-success w-100" style="background: #2eca6a; border: none; height: 100%;">
+                    <button class="btn btn-success w-100" style="background: #2eca6a; border: none; height: 45px;">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
                 </div>
             </form>
         </div>
-
-        
     </div>
-</div>
-
+</section>
 <section id="property-listings" class="section-property section-t8">
     <div class="container">
         <!-- g-2 on mobile for tighter spacing, g-4 on desktop -->
