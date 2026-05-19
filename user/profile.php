@@ -13,36 +13,50 @@ $user = $stmt->fetch();
 // ================= UPDATE PROFILE =================
 if (isset($_POST['update_profile'])) {
 
-    $business_name = $_POST['business_name'];
-    $state = $_POST['state'];
-    $district = $_POST['district'];
-    $rera = $_POST['rera'];
-    $gst = $_POST['gst'];
+    $business_name = trim($_POST['business_name'] ?? '');
+    $state = trim($_POST['state'] ?? '');
+    $district = trim($_POST['district'] ?? '');
+    $rera = trim($_POST['rera'] ?? '');
+    $gst = strtoupper(trim($_POST['gst'] ?? ''));
 
     // GST validation
     if (!empty($gst)) {
+
         if (!preg_match("/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/", $gst)) {
             $error = "Invalid GST number";
         }
     }
 
     if (!isset($error)) {
+
         $stmt = $pdo->prepare("
             UPDATE users 
-            SET business_name=?, state=?, district=?, rera_number=?, gst_number=? 
-            WHERE id=?
+            SET 
+                business_name = ?, 
+                state = ?, 
+                district = ?, 
+                rera_number = ?, 
+                gst_number = ?
+            WHERE id = ?
         ");
-        $stmt->execute([business_name, $state, $district, $rera, $gst, $user_id]);
+
+        $stmt->execute([
+            $business_name,
+            $state,
+            $district,
+            $rera,
+            $gst,
+            $user_id
+        ]);
 
         $success = "Profile updated successfully";
-        
-        // Refresh local array metrics
+
+        // Refresh user data
         $stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch();
     }
 }
-
 // ================= CHANGE PASSWORD =================
 if (isset($_POST['change_password'])) {
 

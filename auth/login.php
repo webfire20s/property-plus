@@ -2,41 +2,74 @@
 session_start();
 require '../config/db.php';
 
+$error = '';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $phone = $_POST['phone'];
-    $password = $_POST['password'];
+    $phone = trim($_POST['phone'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE phone = ?");
-    $stmt->execute([$phone]);
-    $user = $stmt->fetch();
+    // Basic validation
+    if (empty($phone) || empty($password)) {
 
-    if ($user && password_verify($password, $user['password'])) {
+        $error = "Please fill all required fields.";
 
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
+    } elseif (!preg_match('/^[0-9]{10}$/', $phone)) {
 
-        if ($user['status'] == 'pending') {
-            die("Complete your registration payment first.");
-        }
-
-        if ($user['status'] == 'blocked') {
-            die("Your account has been blocked by admin.");
-        }
-
-        // ✅ Only active users
-        $_SESSION['user_id'] = $user['id'];
-
-        header("Location: ../user/dashboard.php");
-        exit;
-        
+        $error = "Invalid phone number format.";
 
     } else {
-        echo "Invalid Credentials";
+
+        $stmt = $pdo->prepare("
+            SELECT * 
+            FROM users 
+            WHERE phone = ?
+            LIMIT 1
+        ");
+
+        $stmt->execute([$phone]);
+
+        $user = $stmt->fetch();
+
+        // User exists + password correct
+        if ($user && password_verify($password, $user['password'])) {
+
+            // Block inactive/deleted users
+            if ($user['status'] == 'inactive') {
+
+                $error = "This account has been deleted or deactivated.";
+
+            } elseif ($user['status'] == 'blocked') {
+
+                $error = "Your account has been blocked by admin.";
+
+            } elseif ($user['status'] == 'pending') {
+
+                $error = "Your account is pending approval.";
+
+            } elseif ($user['status'] != 'active') {
+
+                $error = "Unable to login with this account.";
+
+            } else {
+
+                // Secure session assignment ONLY for active users
+                session_regenerate_id(true);
+
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['role'] = $user['role'] ?? 'user';
+
+                header("Location: ../user/dashboard.php");
+                exit;
+            }
+
+        } else {
+
+            $error = "Invalid phone number or password.";
+        }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,6 +231,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
 
 <div class="login-card">
+    <?php if(!empty($error)): ?>
+        <div class="alert alert-danger mb-4">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
     <div class="brand-logo">
         <img src="../assets/logo.png" alt="Property Plus Logo">
     </div>
