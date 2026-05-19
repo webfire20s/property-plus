@@ -52,18 +52,29 @@
 
     <div class="container copyright text-center mt-4">
       <p>© <span>Copyright</span> <strong class="px-1 sitename">PropertyPlus</strong> <span>All Rights Reserved</span></p>
-      <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you've purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
-        <!-- Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a> | <a href="https://bootstrapmade.com/tools/">DevTools</a> -->
+      
+      <div class="footer-links my-2">
+        <a href="privacy-policy.php" class="text-secondary text-decoration-none mx-2 small-link">Privacy Policy</a>
+        <span class="text-muted">|</span>
+        <a href="terms-conditions.php" class="text-secondary text-decoration-none mx-2 small-link">Terms and Conditions</a>
       </div>
+
+      <div class="credits">
+        </div>
     </div>
 
   </footer>
 
-  <!-- Scroll Top -->
+  <style>
+    .small-link {
+        font-size: 0.85rem;
+        transition: color 0.3s ease;
+    }
+    .small-link:hover {
+        color: #2eca6a !important; /* Matches your theme's signature green hover color */
+    }
+  </style>
+
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <div id="preloader"></div>
@@ -76,4 +87,4 @@
   <script src="<?php echo $base_url; ?>assets/js/main.js"></script>
 
 </body>
-</html> 
+</html>
