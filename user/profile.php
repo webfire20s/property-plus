@@ -32,9 +32,14 @@ if (isset($_POST['update_profile'])) {
             SET business_name=?, state=?, district=?, rera_number=?, gst_number=? 
             WHERE id=?
         ");
-        $stmt->execute([$business_name, $state, $district, $rera, $gst, $user_id]);
+        $stmt->execute([business_name, $state, $district, $rera, $gst, $user_id]);
 
         $success = "Profile updated successfully";
+        
+        // Refresh local array metrics
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch();
     }
 }
 
@@ -62,6 +67,31 @@ if (isset($_POST['change_password'])) {
         exit;
     }
 }
+
+// ================= ACCOUNT DELETION =================
+if (isset($_POST['delete_account'])) {
+    $delete_password = $_POST['delete_confirm_password'];
+
+    if (!password_verify($delete_password, $user['password'])) {
+        $error = "Incorrect password. Account deletion aborted.";
+    } else {
+        // Option A: Safely toggle flag state to maintain relational data integrity
+        $stmt = $pdo->prepare("UPDATE users SET status='inactive' WHERE id=?");
+        $stmt->execute([$user_id]);
+
+        // Destroy session context mapping completely
+        session_destroy();
+        
+        // Redirect completely out of authenticated directories
+        header("Location: ../index.php?account_deleted=1");
+        exit;
+    }
+}
+
+// Catch URL adjustments
+if (isset($_GET['updated']) && $_GET['updated'] == 1) {
+    $success = "Password changed successfully";
+}
 ?>
 
 <style>
@@ -83,6 +113,11 @@ if (isset($_POST['change_password'])) {
         box-shadow: 0 5px 15px rgba(0,0,0,0.02);
     }
 
+    .card-danger-theme {
+        border-color: #f5c2c7;
+        background-color: #fffdfd;
+    }
+
     .section-title {
         font-weight: 700;
         margin-bottom: 25px;
@@ -91,6 +126,10 @@ if (isset($_POST['change_password'])) {
         padding-bottom: 10px;
         border-left: 5px solid #2eca6a;
         padding-left: 15px;
+    }
+
+    .section-title-danger {
+        border-left-color: #dc3545;
     }
 
     .form-label {
@@ -110,6 +149,11 @@ if (isset($_POST['change_password'])) {
     .form-control:focus {
         border-color: #2eca6a;
         box-shadow: 0 0 0 0.2rem rgba(46, 202, 106, 0.1);
+    }
+
+    .form-control-danger:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);
     }
 
     .btn-save {
@@ -146,6 +190,25 @@ if (isset($_POST['change_password'])) {
 
     .btn-password:hover {
         background: #2eca6a;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger-theme {
+        background: #dc3545;
+        color: #fff;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 12px 30px;
+        border: none;
+        transition: 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+    }
+
+    .btn-danger-theme:hover {
+        background: #a71d2a;
+        color: #fff;
         transform: translateY(-2px);
     }
 
@@ -188,31 +251,31 @@ if (isset($_POST['change_password'])) {
                 <div class="col-md-6">
                     <label class="form-label">Business Name</label>
                     <input name="business_name" class="form-control" 
-                        value="<?= htmlspecialchars($user['business_name']) ?>">
+                        value="<?= htmlspecialchars($user['business_name'] ?? '') ?>">
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">State</label>
                     <input name="state" class="form-control" 
-                        value="<?= htmlspecialchars($user['state']) ?>">
+                        value="<?= htmlspecialchars($user['state'] ?? '') ?>">
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">District</label>
                     <input name="district" class="form-control" 
-                        value="<?= htmlspecialchars($user['district']) ?>">
+                        value="<?= htmlspecialchars($user['district'] ?? '') ?>">
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">RERA Number</label>
                     <input name="rera" class="form-control" 
-                        value="<?= htmlspecialchars($user['rera_number']) ?>">
+                        value="<?= htmlspecialchars($user['rera_number'] ?? '') ?>">
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">GST Number</label>
                     <input name="gst" class="form-control" 
-                        value="<?= htmlspecialchars($user['gst_number']) ?>">
+                        value="<?= htmlspecialchars($user['gst_number'] ?? '') ?>">
                 </div>
 
             </div>
@@ -252,6 +315,33 @@ if (isset($_POST['change_password'])) {
         </form>
     </div>
 
+    <div class="card-custom card-danger-theme shadow-sm">
+        <h5 class="section-title section-title-danger text-danger">Danger Zone</h5>
+        <p class="text-secondary small mb-4">
+            Once you delete your profile, your listings directory status and account configuration data will be completely disabled. This action is irreversible.
+        </p>
+
+        <form method="POST" onsubmit="return confirmDeleteAccount();">
+            <div class="row align-items-end g-3">
+                <div class="col-md-6 col-lg-4">
+                    <label class="form-label text-danger fw-bold">Enter Password to Confirm Deletion</label>
+                    <input type="password" name="delete_confirm_password" class="form-control form-control-danger" placeholder="••••••••" required>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <button type="submit" name="delete_account" class="btn btn-danger-theme">
+                        Permanently Delete Account
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
 </div>
+
+<script>
+function confirmDeleteAccount() {
+    return confirm("CRITICAL WARNING:\n\nAre you absolutely sure you want to permanently delete your account?\nAll your active states and preferences will be terminated immediately.");
+}
+</script>
 
 <?php include '../includes/footer.php'; ?>
