@@ -127,12 +127,61 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
 
         <div class="mb-3">
-            <label class="form-label small fw-bold text-secondary">Password</label>
+
+            <label class="form-label small fw-bold text-secondary">
+                Password
+            </label>
+
             <div class="input-group">
-                <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
-                <input type="password" name="password" class="form-control border-start-0" placeholder="••••••••" required>
+
+                <span class="input-group-text bg-transparent border-end-0 text-muted">
+                    <i class="fa-solid fa-lock"></i>
+                </span>
+
+                <input
+                    type="password"
+                    name="password"
+                    id="loginPassword"
+                    class="form-control border-start-0"
+                    placeholder="••••••••"
+                    required
+                >
+
+                <button
+                    type="button"
+                    class="input-group-text bg-transparent"
+                    onclick="toggleLoginPassword()"
+                    style="cursor:pointer;"
+                >
+                    <i class="fa-solid fa-eye text-muted" id="loginPasswordIcon"></i>
+                </button>
+
             </div>
+
         </div>
+
+        <script>
+        function toggleLoginPassword() {
+
+            let passwordField = document.getElementById('loginPassword');
+            let icon = document.getElementById('loginPasswordIcon');
+
+            if (passwordField.type === "password") {
+
+                passwordField.type = "text";
+
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+
+            } else {
+
+                passwordField.type = "password";
+
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        </script>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="form-check">

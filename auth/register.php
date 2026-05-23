@@ -8,6 +8,12 @@ if (session_status() === PHP_SESSION_NONE) {
 $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (
+        !isset($_POST['payment_verified']) ||
+        $_POST['payment_verified'] != '1'
+    ) {
+        throw new Exception("Registration payment required");
+    }
 
     try {
 
@@ -18,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // ✅ SAFE INPUTS
         $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
         $password_raw = $_POST['password'] ?? '';
         $business_name = trim($_POST['business_name'] ?? '');
         $state = trim($_POST['state'] ?? '');
@@ -28,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ✅ VALIDATIONS
         if (!preg_match('/^[0-9]{10}$/', $phone)) {
             throw new Exception("Invalid phone number");
+        }
+        if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Invalid email address");
         }
 
         if (strlen($password_raw) < 4) {
@@ -62,11 +72,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ✅ INSERT USER
         $stmt = $pdo->prepare("
             INSERT INTO users 
-            (phone, password, business_name, state, district, rera_number, gst_number, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+            (phone, email, password, business_name, state, district, rera_number, gst_number, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')
         ");
 
-        $stmt->execute([$phone, $password, $business_name, $state, $district, $rera, $gst]);
+        $stmt->execute([
+            $phone,
+            $email,
+            $password,
+            $business_name,
+            $state,
+            $district,
+            $rera,
+            $gst
+        ]);
 
         $user_id = $pdo->lastInsertId();
 
@@ -265,6 +284,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="button" onclick="verifyOTP()" class="btn btn-outline-dark w-100 p-2" style="border-radius:8px;">Verify</button>
                         </div>
+                        <div class="col-12">
+                            <label class="form-label">Email Address</label>
+
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-2 border-end-0">
+                                    <i class="fa-solid fa-envelope text-muted"></i>
+                                </span>
+
+                                <input 
+                                    type="email"
+                                    name="email" 
+                                    class="form-control border-start-0"
+                                    placeholder="example@email.com"
+                                >
+                            </div>
+                        </div>
                         <div id="otp_msg" class="small mt-2 ps-1"></div>
                     </div>
 
@@ -304,14 +339,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input name="password" type="password" class="form-control" placeholder="*********" required>
                     </div>
 
-                    <!-- // <div class="p-3 info-box rounded-3 small mb-4">
-                    //     <i class="fa-solid fa-shield-halved me-2"></i> 
-                    //     Registration requires a one-time activation fee of <b>₹1,000</b> to verify your agency status.
-                    // </div> -->
+                     <div class="p-3 info-box rounded-3 small mb-4">
+                         <i class="fa-solid fa-shield-halved me-2"></i> 
+                         Registration requires a one-time activation fee of <b>₹120</b>.
+                     </div>
 
-                    <button type="submit" class="btn-register shadow-sm">
+                    <button type="button" onclick="startRegistrationPayment()" class="btn-register shadow-sm" id="registerBtn">
                         Create Account
                     </button>
+
+                    <input type="hidden" name="payment_verified" id="payment_verified" value="0">
                     
                     <p class="text-center mt-4 text-muted small">
                         Already have an account? <a href="login.php" class="text-success fw-bold text-decoration-none">Sign In</a>
@@ -346,6 +383,120 @@ function verifyOTP() {
     .then(data => { document.getElementById('otp_msg').innerHTML = data; });
 }
 </script>
+<script>
+function startRegistrationPayment() {
 
+    const btn = document.getElementById('registerBtn');
+    btn.disabled = true;
+    btn.innerHTML = "Processing...";
+
+    // Basic frontend validation
+    const phone = document.querySelector('[name=phone]').value.trim();
+    const password = document.querySelector('[name=password]').value.trim();
+    const business = document.querySelector('[name=business_name]').value.trim();
+    const state = document.querySelector('[name=state]').value.trim();
+    const district = document.querySelector('[name=district]').value.trim();
+
+    if (!phone || !password || !business || !state || !district) {
+        alert("Please fill all required fields");
+
+        btn.disabled = false;
+        btn.innerHTML = "Pay ₹120 & Create Account";
+        return;
+    }
+
+    fetch('../user/create_order.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'amount=120&type=registration'
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.order_id) {
+
+            alert(data.error || "Payment initialization failed");
+
+            btn.disabled = false;
+            btn.innerHTML = "Pay ₹120 & Create Account";
+            return;
+        }
+
+        var options = {
+
+            "key": data.key,
+            "amount": data.amount * 100,
+            "currency": "INR",
+            "name": "Property Plus",
+            "description": "Registration Fee",
+            "order_id": data.order_id,
+
+            "prefill": {
+                "contact": phone,
+                "name": business
+            },
+
+            "handler": function (response) {
+
+                fetch('../user/verify_payment.php', {
+
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify(response)
+
+                })
+                .then(res => res.text())
+                .then(res => {
+
+                    if (res.trim() === "success") {
+
+                        document.getElementById('payment_verified').value = "1";
+
+                        document.getElementById('registerForm').submit();
+
+                    } else {
+
+                        alert("Payment verification failed");
+
+                        btn.disabled = false;
+                        btn.innerHTML = "Pay ₹120 & Create Account";
+                    }
+                });
+
+            },
+
+            "theme": {
+                "color": "#2eca6a"
+            }
+        };
+
+        var rzp = new Razorpay(options);
+
+        rzp.on('payment.failed', function () {
+
+            alert("Payment failed");
+
+            btn.disabled = false;
+            btn.innerHTML = "Pay ₹120 & Create Account";
+        });
+
+        rzp.open();
+
+    })
+    .catch(() => {
+
+        alert("Something went wrong");
+
+        btn.disabled = false;
+        btn.innerHTML = "Pay ₹120 & Create Account";
+    });
+}
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 </html>

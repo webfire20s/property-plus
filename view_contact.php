@@ -28,7 +28,7 @@ $stmt2->execute([$user_id]);
 $userPlan = strtolower($stmt2->fetchColumn() ?? 'listing');
 
 // Define limits
-$view_limit = 2;
+$view_limit = 1;
 
 switch ($userPlan) {
     case 'basic':

@@ -145,8 +145,8 @@ $plans = $stmt->fetchAll();
         $features_map = [
             'listing' => [
                 'Browse properties',
-                'Add property (text only)',
-                'No images allowed',
+                'Add property (only 2 properties)',
+                '5 images allowed',
                 'No videos',
                 'Limited visibility',
                 'Document verification'

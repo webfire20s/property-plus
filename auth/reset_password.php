@@ -1,85 +1,65 @@
 <?php
 session_start();
+
 require '../config/db.php';
 
-$error = '';
+if (
+    !isset($_SESSION['reset_verified']) ||
+    $_SESSION['reset_verified'] !== true
+) {
+    die("Unauthorized");
+}
+
+$error = "";
+$success = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $phone = trim($_POST['phone'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $password = $_POST['password'];
 
-    // Basic validation
-    if (empty($phone) || empty($password)) {
+    if (strlen($password) < 4) {
 
-        $error = "Please fill all required fields.";
-
-    } elseif (!preg_match('/^[0-9]{10}$/', $phone)) {
-
-        $error = "Invalid phone number format.";
+        $error = "Password too short.";
 
     } else {
 
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
         $stmt = $pdo->prepare("
-            SELECT * FROM users 
-            WHERE phone = ?
-            LIMIT 1
+            UPDATE users
+            SET password=?
+            WHERE id=?
         ");
 
-        $stmt->execute([$phone]);
+        $stmt->execute([
+            $hash,
+            $_SESSION['reset_user_id']
+        ]);
 
-        $user = $stmt->fetch();
+        unset(
+            $_SESSION['reset_user_id'],
+            $_SESSION['reset_email'],
+            $_SESSION['reset_otp'],
+            $_SESSION['reset_expiry'],
+            $_SESSION['reset_verified']
+        );
 
-        // User exists + password correct
-        if ($user && password_verify($password, $user['password'])) {
-
-            // Block inactive/deleted users
-            if ($user['status'] == 'inactive') {
-
-                $error = "This account has been deleted or deactivated.";
-
-            } elseif ($user['status'] == 'blocked') {
-
-                $error = "Your account has been blocked by admin.";
-
-            } elseif ($user['status'] == 'pending') {
-
-                $error = "Your account is pending approval.";
-
-            } elseif ($user['status'] != 'active') {
-
-                $error = "Unable to login with this account.";
-
-            } else {
-
-                // Secure session assignment ONLY for active users
-                session_regenerate_id(true);
-
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['role'] = $user['role'] ?? 'user';
-
-                header("Location: ../user/dashboard.php");
-                exit;
-            }
-
-        } else {
-
-            $error = "Invalid phone number or password.";
-        }
+        $success = "Password changed successfully.";
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Partner Login | EstateAgency</title>
+    <title>Reset Password | EstateAgency</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    
+
     <style>
         :root {
             --theme-green: #2eca6a;
@@ -129,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .brand-logo img {
-            max-width: 180px; /* Adjust width as per your logo shape */
+            max-width: 180px;
             height: auto;
         }
 
@@ -188,24 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background: transparent;
         }
 
-        .forgot-link-wrapper {
-            text-align: right;
-            margin-top: 10px;
-            font-size: 0.85rem;
-        }
-
-        .forgot-link-wrapper a {
-            color: #666;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease;
-        }
-
-        .forgot-link-wrapper a:hover {
-            color: var(--theme-green);
-        }
-
-        .btn-login {
+        .btn-action {
             background-color: var(--theme-dark);
             color: white;
             border: none;
@@ -213,36 +176,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             padding: 16px;
             width: 100%;
             font-weight: 700;
-            margin-top: 25px;
+            margin-top: 10px;
             transition: 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-size: 0.85rem;
         }
 
-        .btn-login:hover {
+        .btn-action:hover {
             background-color: var(--theme-green);
             color: #fff;
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(46, 202, 106, 0.2);
         }
 
-        .footer-link {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 0.9rem;
-            color: #888;
+        .btn-success-redirect {
+            background-color: var(--theme-green);
         }
-
-        .footer-link a {
-            color: var(--theme-green);
-            text-decoration: none;
-            font-weight: 700;
-            transition: 0.2s;
-        }
-
-        .footer-link a:hover {
-            color: #000;
+        
+        .btn-success-redirect:hover {
+            background-color: #000;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
         }
 
         .alert {
@@ -256,62 +210,60 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
 
 <div class="login-card">
-    <?php if(!empty($error)): ?>
+    <div class="brand-logo">
+        <img src="../assets/logo.png" alt="Property Plus Logo">
+    </div>
+
+    <h3 class="login-title">Create Password</h3>
+    <p class="login-subtitle">Configure your brand new structural key settings</p>
+
+    <?php if($error): ?>
         <div class="alert alert-danger mb-4 shadow-sm">
             <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($error) ?>
         </div>
     <?php endif; ?>
-    
-    <div class="brand-logo">
-        <img src="../assets/logo.png" alt="Property Plus Logo">
-    </div>
-    <h3 class="login-title">Partner Portal</h3>
-    <p class="login-subtitle">Access your listing management dashboard</p>
 
-    <form method="POST">
-        <div class="mb-4">
-            <label class="form-label">Phone Number</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-mobile-screen-button"></i></span>
-                <input name="phone" type="text" class="form-control" placeholder="9876543210" required>
-            </div>
+    <?php if($success): ?>
+        <div class="alert alert-success mb-4 shadow-sm">
+            <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($success) ?>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Security Key</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
-                <input 
-                    name="password"
-                    type="password"
-                    class="form-control"
-                    id="passwordField"
-                    placeholder="••••••••"
-                    required
-                >
-                <button 
-                    type="button"
-                    class="input-group-text bg-white"
-                    onclick="togglePassword()"
-                    style="cursor:pointer;"
-                >
-                    <i class="fa-solid fa-eye" id="toggleIcon"></i>
-                </button>
-            </div>
-            
-            <div class="forgot-link-wrapper">
-                <a href="forgot_password.php">Forgot Password?</a>
-            </div>
-        </div>
+        <a href="login.php" class="btn btn-action btn-success-redirect text-center d-block text-decoration-none">
+            Proceed to Sign In
+        </a>
 
-        <button type="submit" class="btn-login">
-            Secure Sign In
-        </button>
-    </form>
-    
-    <div class="footer-link">
-        Not a partner yet? <a href="register.php">Create Account</a>
-    </div>
+    <?php else: ?>
+
+        <form method="POST">
+            <div class="mb-4">
+                <label class="form-label">New Security Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                    <input 
+                        type="password"
+                        name="password"
+                        class="form-control"
+                        id="passwordField"
+                        placeholder="••••••••"
+                        required
+                    >
+                    <button 
+                        type="button"
+                        class="input-group-text bg-white"
+                        onclick="togglePassword()"
+                        style="cursor:pointer;"
+                    >
+                        <i class="fa-solid fa-eye" id="toggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-action">
+                Update Password
+            </button>
+        </form>
+
+    <?php endif; ?>
 </div>
 
 <script>

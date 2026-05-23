@@ -15,6 +15,16 @@ $stmt = $pdo->prepare("
 $stmt->execute([$_SESSION['user_id']]);
 $membership = $stmt->fetch();
 
+$stmtUser = $pdo->prepare("
+    SELECT business_name 
+    FROM users 
+    WHERE id=? 
+    LIMIT 1
+");
+
+$stmtUser->execute([$_SESSION['user_id']]);
+$currentUser = $stmtUser->fetch();
+
 // ✅ Property usage tracker
 $stmt = $pdo->prepare("SELECT COUNT(*) FROM properties WHERE user_id=?");
 $stmt->execute([$_SESSION['user_id']]);
@@ -106,7 +116,9 @@ $usage_percent = ($property_limit > 0)
     <div class="welcome-card shadow-lg d-flex justify-content-between align-items-center" data-aos="fade-up">
         <div>
             <span style="color: #2eca6a;" class="fw-bold small text-uppercase">Overview</span>
-            <h1 class="fw-extrabold mb-2" style="font-weight: 800; color: #fff;">User Dashboard</h1>
+            <h1 class="fw-extrabold mb-2" style="font-weight: 800; color: #fff;">
+                Welcome, <?= htmlspecialchars($currentUser['business_name'] ?? 'User') ?>
+            </h1>
             <p class="mb-0 opacity-75">Welcome back! Manage your property portfolio and leads.</p>
         </div>
         <div class="d-none d-md-block">

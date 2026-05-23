@@ -83,22 +83,74 @@ if (isset($_POST['change_password'])) {
 }
 
 // ================= ACCOUNT DELETION =================
+// ================= ACCOUNT DELETION =================
 if (isset($_POST['delete_account'])) {
-    $delete_password = $_POST['delete_confirm_password'];
 
-    if (!password_verify($delete_password, $user['password'])) {
+    $delete_password = trim($_POST['delete_confirm_password'] ?? '');
+
+    if (empty($delete_password)) {
+
+        $error = "Please enter your password.";
+
+    } elseif (!password_verify($delete_password, $user['password'])) {
+
         $error = "Incorrect password. Account deletion aborted.";
-    } else {
-        // Option A: Safely toggle flag state to maintain relational data integrity
-        $stmt = $pdo->prepare("UPDATE users SET status='inactive' WHERE id=?");
-        $stmt->execute([$user_id]);
 
-        // Destroy session context mapping completely
-        session_destroy();
-        
-        // Redirect completely out of authenticated directories
-        header("Location: ../index.php?account_deleted=1");
-        exit;
+    } else {
+
+        try {
+
+            $pdo->beginTransaction();
+
+            // Disable user safely
+            $stmt = $pdo->prepare("
+                UPDATE users 
+                SET status='inactive' 
+                WHERE id=?
+            ");
+
+            $stmt->execute([$user_id]);
+
+            // Disable all properties of user
+            $stmt = $pdo->prepare("
+                UPDATE properties 
+                SET status='inactive'
+                WHERE user_id=?
+            ");
+
+            $stmt->execute([$user_id]);
+
+            $pdo->commit();
+
+            // Destroy full session
+            $_SESSION = [];
+
+            if (ini_get("session.use_cookies")) {
+
+                $params = session_get_cookie_params();
+
+                setcookie(
+                    session_name(),
+                    '',
+                    time() - 42000,
+                    $params["path"],
+                    $params["domain"],
+                    $params["secure"],
+                    $params["httponly"]
+                );
+            }
+
+            session_destroy();
+
+            header("Location: ../index.php?account_deleted=1");
+            exit;
+
+        } catch (Exception $e) {
+
+            $pdo->rollBack();
+
+            $error = "Something went wrong while deleting the account.";
+        }
     }
 }
 

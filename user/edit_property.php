@@ -55,9 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Update main details
     $stmt = $pdo->prepare("
-        UPDATE properties SET 
-        title=?, description=?, price=?, city=?, property_type=?, 
-        area=?, purpose=?, address=?, pincode=?, status='pending'
+    UPDATE properties SET 
+        title=?, 
+        description=?, 
+        price=?, 
+        city=?, 
+        property_type=?, 
+        area=?, 
+        purpose=?, 
+        address=?, 
+        pincode=?
         WHERE id=? AND user_id=?
     ");
 

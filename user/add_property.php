@@ -16,7 +16,7 @@ $membership = $stmt->fetch();
 
 // ✅ DEFAULT: Listing Plan (FREE)
 $plan_name = 'Listing';
-$image_limit = 0;
+$image_limit = 5;
 $allow_video = false;
 $property_limit = 2; // unlimited text listings
 

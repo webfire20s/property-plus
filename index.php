@@ -50,18 +50,163 @@ if (!empty($_GET['max_area'])) {
     $params[] = $_GET['max_area'];
 }
 
-$sql = "SELECT * FROM properties WHERE " . implode(" AND ", $where);
+// ================= USERS FETCH =================
+// ================= USERS FETCH =================
+
+// PAGINATION
+$limit = 12;
+
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+if ($page < 1) {
+    $page = 1;
+}
+
+$offset = ($page - 1) * $limit;
+
+$userWhere = ["u.status='active'"];
+$userParams = [];
+
+// Optional filters from property data
+if (!empty($_GET['city'])) {
+
+    $userWhere[] = "EXISTS (
+        SELECT 1 FROM properties p2
+        WHERE p2.user_id = u.id
+        AND p2.status='approved'
+        AND p2.city LIKE ?
+    )";
+
+    $userParams[] = "%" . $_GET['city'] . "%";
+}
+
+if (!empty($_GET['category'])) {
+
+    $userWhere[] = "EXISTS (
+        SELECT 1 FROM properties p2
+        WHERE p2.user_id = u.id
+        AND p2.status='approved'
+        AND p2.category = ?
+    )";
+
+    $userParams[] = $_GET['category'];
+}
+
+if (!empty($_GET['purpose'])) {
+
+    $userWhere[] = "EXISTS (
+        SELECT 1 FROM properties p2
+        WHERE p2.user_id = u.id
+        AND p2.status='approved'
+        AND p2.purpose = ?
+    )";
+
+    $userParams[] = $_GET['purpose'];
+}
+
+// MAIN USERS QUERY
+$sql = "
+    SELECT 
+        u.id,
+        u.business_name,
+        u.state,
+        u.district,
+
+        COUNT(DISTINCT p.id) as total_properties,
+
+        COALESCE(m.name, 'Listing') as membership_name,
+
+        CASE LOWER(COALESCE(m.name, 'listing'))
+            WHEN 'platinum' THEN 5
+            WHEN 'gold' THEN 4
+            WHEN 'silver' THEN 3
+            WHEN 'basic' THEN 2
+            ELSE 1
+        END as membership_priority
+
+    FROM users u
+
+    -- SHOW ALL USERS
+    LEFT JOIN properties p 
+        ON p.user_id = u.id
+        AND p.status='approved'
+
+    -- SAFER MEMBERSHIP JOIN (latest active membership only)
+    LEFT JOIN user_memberships um
+        ON um.id = (
+            SELECT um2.id
+            FROM user_memberships um2
+            WHERE um2.user_id = u.id
+            AND um2.status='active'
+            ORDER BY um2.id DESC
+            LIMIT 1
+        )
+
+    LEFT JOIN memberships m
+        ON m.id = um.membership_id
+
+    WHERE " . implode(" AND ", $userWhere) . "
+
+    GROUP BY 
+        u.id,
+        u.business_name,
+        u.state,
+        u.district,
+        m.name
+
+    ORDER BY
+        membership_priority DESC,
+        total_properties DESC,
+        u.id DESC
+
+    LIMIT $limit OFFSET $offset
+";
+
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$properties = $stmt->fetchAll();
+$stmt->execute($userParams);
+$users = $stmt->fetchAll();
+
+// TOTAL COUNT FOR PAGINATION
+$countSql = "
+    SELECT COUNT(*) FROM (
+        SELECT u.id
+
+        FROM users u
+
+        LEFT JOIN properties p
+            ON p.user_id = u.id
+            AND p.status='approved'
+
+        WHERE " . implode(" AND ", $userWhere) . "
+
+        GROUP BY u.id
+    ) temp
+";
+
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($userParams);
+
+$totalUsers = $countStmt->fetchColumn();
+
+$totalPages = ceil($totalUsers / $limit);
 
 $categories = [
-    "Builder Floors", "Apartments", "Flats", "Independent Floors", "Independent Kothi",
-    "Independent Villa", "Society Flats", "Commercial Building", "Commercial Shop",
-    "Commercial Showroom", "Commercial Floor", "Land", "Commercial Land", "Agricultural Land"
+    'Builder Floors',
+    'Apartments',
+    'Flats',
+    'Independent Floors',
+    'Independent Kothi',
+    'Independent Villa',
+    'Society Flats',
+    'Commercial Building',
+    'Commercial Shop',
+    'Commercial Showroom',
+    'Commercial Floor',
+    'Land',
+    'Commercial Land',
+    'Agricultural Land'
 ];
 ?>
-
 
 
 <!-- Background Image CSS -->
@@ -173,129 +318,158 @@ $categories = [
         </div>
     </div>
 </section>
-<section id="property-listings" class="section-property section-t8">
+<section id="property-listings" class="section-property section-t8 py-5" style="background: #f7f7f7;">
     <div class="container">
-        <!-- g-2 on mobile for tighter spacing, g-4 on desktop -->
-        <div class="row g-2 g-md-4">
-            <?php foreach ($properties as $p): ?>
-                <!-- col-6 ensures 2 per row on mobile -->
-                <div class="col-6 col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
-                    <a href="property_details.php?id=<?= $p['id'] ?>" style="text-decoration:none; color:inherit;">
-                        <div class="prop-card h-100 shadow-sm" style="background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
-                            
-                            <div class="prop-img-wrapper" style="position: relative;">
-                                <!-- Scaled down badge for mobile -->
-                                <span class="badge" style="position: absolute; top: 10px; right: 10px; background: #2eca6a; color: #fff; padding: 4px 8px; z-index: 2; font-size: 0.7rem;">
-                                    <?= ucfirst($p['purpose'] ?? 'Listing') ?>
-                                </span>
-                                
-                                <?php if($p['status']=='approved'): ?>
-                                    <span class="badge bg-success" style="position: absolute; top: 10px; left: 10px; z-index: 2; font-size: 0.7rem;">Verified</span>
-                                <?php endif; ?>
-                                
-                                <?php 
-                                $imgStmt = $pdo->prepare("SELECT image_path FROM property_images WHERE property_id=?");
-                                $imgStmt->execute([$p['id']]);
-                                $images = $imgStmt->fetchAll(PDO::FETCH_COLUMN);
 
-                                if (!empty($images)): ?>
-                                <div id="carousel<?= $p['id'] ?>" class="carousel slide" data-bs-ride="carousel">
-                                    <div class="carousel-inner">
-                                        <?php foreach ($images as $index => $img): ?>
-                                            <div class="carousel-item <?= $index == 0 ? 'active' : '' ?>">
-                                                <!-- Responsive height: 150px on mobile, 240px on desktop -->
-                                                <img src="uploads/<?= $img ?>" 
-                                                    style="width:100%; object-fit:cover;" 
-                                                    class="prop-img-height">
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-                                <?php else: ?>
-                                    <div class="prop-img-height" style="background: #f1f5f9; display:flex; align-items:center; justify-content:center;">
-                                        <i class="fa-solid fa-house-chimney fa-2x"></i>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Reduced padding for mobile (p-2 on mobile, p-3/4 on desktop) -->
-                            <div class="prop-details" style="padding: 12px;">
-                                <div class="prop-price" style="font-weight: 800; color: #2eca6a; line-height: 1;">₹<?= number_format($p['price']) ?></div>
-                                
-                                <div class="prop-location text-truncate" style="color: #64748b; font-size: 0.75rem; margin: 5px 0;">
-                                    <i class="fa-solid fa-location-dot me-1 text-danger"></i> <?= htmlspecialchars($p['city']) ?>
-                                </div>
-                                
-                                <h3 class="prop-title" style="font-weight: 700; margin-bottom: 10px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 34px; line-height: 1.2;">
-                                    <?= htmlspecialchars($p['title']) ?>
-                                </h3>
-                                
-                                <!-- Meta: Hidden on very small screens to save space, or scaled down -->
-                                <div class="prop-meta border-top pt-2 mt-1 d-flex flex-wrap" style="gap: 8px; font-size: 0.7rem; color: #64748b;">
-                                    <span class="text-truncate"><i class="fa-solid fa-ruler-combined me-1"></i> <?= $p['area'] ?? '-' ?></span>
-                                </div>
-
-                                <div class="access-box pt-2 mt-2">
-                                    <?php if (isset($_SESSION['user_id'])): ?>
-                                        <?php
-                                        // Logic remains exactly as you provided
-                                        $stmt = $pdo->prepare("SELECT COUNT(*) FROM contact_views WHERE user_id=?");
-                                        $stmt->execute([$_SESSION['user_id']]);
-                                        $viewCount = $stmt->fetchColumn();
-
-                                        $stmt2 = $pdo->prepare("SELECT COUNT(*) FROM contact_requests WHERE sender_id=?");
-                                        $stmt2->execute([$_SESSION['user_id']]);
-                                        $requestCount = $stmt2->fetchColumn();
-
-                                        $stmt3 = $pdo->prepare("SELECT m.name FROM user_memberships um JOIN memberships m ON um.membership_id = m.id WHERE um.user_id=? AND um.status='active' ORDER BY um.id DESC LIMIT 1");
-                                        $stmt3->execute([$_SESSION['user_id']]);
-                                        $userPlan = strtolower($stmt3->fetchColumn() ?? 'listing');
-
-                                        $view_limit = 2; $request_limit = 2;
-                                        switch ($userPlan) {
-                                            case 'basic': $view_limit = 10; $request_limit = 10; break;
-                                            case 'silver': $view_limit = 25; $request_limit = 20; break;
-                                            case 'gold': $view_limit = 50; $request_limit = 40; break;
-                                            case 'platinum': $view_limit = 999; $request_limit = 999; break;
-                                        }
-                                        ?>
-
-                                        <div class="row g-1">
-                                            <div class="col-12 col-md-6">
-                                                <?php if ($viewCount < $view_limit): ?>
-                                                    <a href="view_contact.php?id=<?= $p['id'] ?>" class="btn btn-outline-dark btn-sm w-100 py-1" style="font-size: 0.7rem;">View</a>
-                                                <?php else: ?>
-                                                    <span class="badge bg-light text-danger w-100 py-2" style="font-size: 0.6rem;">Limit</span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <?php if ($requestCount < $request_limit): ?>
-                                                    <a href="send_request.php?id=<?= $p['id'] ?>" class="btn btn-dark btn-sm w-100 py-1" style="font-size: 0.7rem;">Contact</a>
-                                                <?php else: ?>
-                                                    <span class="badge bg-light text-danger w-100 py-2" style="font-size: 0.6rem;">Limit</span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    <?php else: ?>
-                                        <a href="auth/login.php" class="btn btn-outline-success btn-sm w-100 py-1" style="font-size: 0.75rem;">
-                                            <i class="fa-solid fa-lock me-1"></i> Login
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
+        <div class="row mb-5">
+            <div class="col-md-12 col-lg-8">
+                <div class="title-wrap">
+                    <div class="title-box" style="border-left: 5px solid #2eca6a; padding-left: 15px;">
+                        <h2 class="title-a" style="font-family: 'Poppins', sans-serif; font-weight: 700; color: #000000; margin: 0; letter-spacing: -0.5px;">
+                            Verified Professionals
+                        </h2>
+                    </div>
                 </div>
-            <?php endforeach; ?>
+            </div>
+            <div class="col-md-12 col-lg-4 d-flex align-items-center justify-content-lg-end mt-3 mt-lg-0">
+                <span class="badge px-3 py-2.5 bg-light text-dark border" style="font-family: 'Poppins', sans-serif; border-radius: 0px; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase;">
+                    <?= count($users) ?> Registered Partners
+                </span>
+            </div>
         </div>
+
+        <div class="row g-4">
+
+            <?php if(count($users) > 0): ?>
+
+                <?php foreach($users as $u): ?>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+
+                        <?php
+                        $membership = strtolower($u['membership_name']);
+                        
+                        // Theme matching tier background indicators
+                        $tierBadgeBg = '#2eca6a'; 
+                        switch($membership) {
+                            case 'platinum': $tierBadgeBg = '#7c3aed'; break;
+                            case 'gold':     $tierBadgeBg = '#f59e0b'; break;
+                            case 'silver':   $tierBadgeBg = '#555555'; break;
+                            case 'basic':    $tierBadgeBg = '#2eca6a'; break;
+                        }
+                        ?>
+
+                        <div class="card border-0 theme-grid-box"
+                             style="border-radius: 0px; background: #ffffff; border: 1px solid #ebebeb !important; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column;">
+                            
+                            <div class="p-4 position-relative" style="background: #ffffff; flex-grow: 1;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge text-white px-2.5 py-1.5" style="background: <?= $tierBadgeBg ?>; border-radius: 0px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
+                                        <?= htmlspecialchars($u['membership_name']) ?>
+                                    </span>
+                                    <span style="color: #2eca6a; font-size: 1.1rem;"><i class="fa-solid fa-circle-check"></i></span>
+                                </div>
+                                
+                                <h4 class="fw-bold text-dark mb-1 text-truncate" style="font-family: 'Poppins', sans-serif; font-size: 1.3rem; letter-spacing: -0.5px;">
+                                    <?= htmlspecialchars($u['business_name']) ?>
+                                </h4>
+                                
+                                <p class="text-muted mb-0 text-truncate small" style="font-family: 'Poppins', sans-serif;">
+                                    <i class="fa-solid fa-location-dot me-1 text-success"></i><?= htmlspecialchars($u['district']) ?>, <?= htmlspecialchars($u['state']) ?>
+                                </p>
+                            </div>
+
+                            <div class="p-4 pt-0" style="background: #ffffff;">
+                                
+                                <div class="d-flex justify-content-between align-items-center py-2.5 mb-3" style="border-top: 1px dashed #ebebeb; border-bottom: 1px dashed #ebebeb;">
+                                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">Active Portfolio</span>
+                                    <span class="fw-bold text-dark" style="font-size: 1rem; font-family: 'Poppins', sans-serif;">
+                                        <?= $u['total_properties'] ?> Properties
+                                    </span>
+                                </div>
+
+                                <div class="mt-2">
+                                    <a href="partner_properties.php?user_id=<?= $u['id'] ?>"
+                                       class="btn btn-theme-block w-100 d-flex align-items-center justify-content-center gap-2"
+                                       style="background: #000000; border: none; border-radius: 0px; font-weight: 700; padding: 13px; color: #ffffff; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-family: 'Poppins', sans-serif; transition: all 0.25s ease;">
+                                        View Properties
+                                        <i class="fa-solid fa-chevron-right style-arrow" style="font-size: 0.7rem; transition: transform 0.2s ease;"></i>
+                                    </a>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                <?php endforeach; ?>
+
+            <?php else: ?>
+
+                <div class="col-12">
+                    <div class="text-center p-5 border style-fallback-alert" style="background: #ffffff; border-color: #ebebeb !important;">
+                        <i class="fa-solid fa-folder-open mb-3 text-muted opacity-50" style="font-size: 2.5rem;"></i>
+                        <h4 class="fw-bold text-dark mb-1" style="font-family: 'Poppins', sans-serif;">No Partners Found</h4>
+                        <p class="text-muted mb-0 small">No registered resource partners discovered inside this sector scope.</p>
+                    </div>
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
     </div>
+
+    <?php if($totalPages > 1): ?>
+        <div class="container mt-5">
+            <nav class="d-flex justify-content-center">
+                <ul class="pagination" style="border-radius: 0px; box-shadow: none;">
+
+                    <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>" style="margin: 0 3px;">
+                            <a class="page-link template-pagination-link"
+                               href="?page=<?= $i ?><?php if(!empty($_GET['city'])): ?>&city=<?= urlencode($_GET['city']) ?><?php endif; ?><?php if(!empty($_GET['category'])): ?>&category=<?= urlencode($_GET['category']) ?><?php endif; ?><?php if(!empty($_GET['purpose'])): ?>&purpose=<?= urlencode($_GET['purpose']) ?><?php endif; ?>"
+                               style="padding: 12px 18px; font-weight: 600; font-size: 0.85rem; border: 1px solid #ebebeb; color: #000000; background: #ffffff; border-radius: 0px; transition: all 0.2s ease;">
+                                <?= $i ?>
+                            </a>
+                        </li>
+                    <?php endfor; ?>
+
+                </ul>
+            </nav>
+        </div>
+    <?php endif; ?>
 </section>
 
-<!-- Add this small CSS block to your stylesheet or header to handle responsive text/heights -->
 <style>
     .prop-img-height { height: 150px; }
     .prop-price { font-size: 1rem; }
     .prop-title { font-size: 0.85rem; }
+    
+    /* Hover Transitions (Flat Shadow Shifts, Solid Green Transitions) */
+    .theme-grid-box:hover {
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05) !important;
+    }
+    .theme-grid-box:hover .btn-theme-block {
+        background: #2eca6a !important;
+        color: #ffffff !important;
+    }
+    .theme-grid-box:hover .style-arrow {
+        transform: translateX(3px);
+    }
+    
+    /* Pagination Color Matching */
+    .pagination .page-item.active .template-pagination-link {
+        background-color: #2eca6a !important;
+        border-color: #2eca6a !important;
+        color: #ffffff !important;
+    }
+    .template-pagination-link:hover {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        border-color: #000000 !important;
+    }
     
     @media (min-width: 768px) {
         .prop-img-height { height: 240px; }
@@ -303,7 +477,7 @@ $categories = [
         .prop-title { font-size: 1.1rem; }
     }
 </style>
+
 <?php 
-// 2. Include the new footer (this handles copyright and JS scripts)
 include('includes/footer.php'); 
 ?>

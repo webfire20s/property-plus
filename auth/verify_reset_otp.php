@@ -1,85 +1,41 @@
 <?php
 session_start();
-require '../config/db.php';
 
-$error = '';
+$error = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $phone = trim($_POST['phone'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $otp = trim($_POST['otp']);
 
-    // Basic validation
-    if (empty($phone) || empty($password)) {
+    if (time() > $_SESSION['reset_expiry']) {
 
-        $error = "Please fill all required fields.";
+        $error = "OTP expired.";
 
-    } elseif (!preg_match('/^[0-9]{10}$/', $phone)) {
+    } elseif ($otp != $_SESSION['reset_otp']) {
 
-        $error = "Invalid phone number format.";
+        $error = "Invalid OTP.";
 
     } else {
 
-        $stmt = $pdo->prepare("
-            SELECT * FROM users 
-            WHERE phone = ?
-            LIMIT 1
-        ");
+        $_SESSION['reset_verified'] = true;
 
-        $stmt->execute([$phone]);
-
-        $user = $stmt->fetch();
-
-        // User exists + password correct
-        if ($user && password_verify($password, $user['password'])) {
-
-            // Block inactive/deleted users
-            if ($user['status'] == 'inactive') {
-
-                $error = "This account has been deleted or deactivated.";
-
-            } elseif ($user['status'] == 'blocked') {
-
-                $error = "Your account has been blocked by admin.";
-
-            } elseif ($user['status'] == 'pending') {
-
-                $error = "Your account is pending approval.";
-
-            } elseif ($user['status'] != 'active') {
-
-                $error = "Unable to login with this account.";
-
-            } else {
-
-                // Secure session assignment ONLY for active users
-                session_regenerate_id(true);
-
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['role'] = $user['role'] ?? 'user';
-
-                header("Location: ../user/dashboard.php");
-                exit;
-            }
-
-        } else {
-
-            $error = "Invalid phone number or password.";
-        }
+        header("Location: reset_password.php");
+        exit;
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Partner Login | EstateAgency</title>
+    <title>Verify OTP | EstateAgency</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    
+
     <style>
         :root {
             --theme-green: #2eca6a;
@@ -129,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .brand-logo img {
-            max-width: 180px; /* Adjust width as per your logo shape */
+            max-width: 180px;
             height: auto;
         }
 
@@ -179,8 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .form-control {
             border: none;
             padding: 15px 15px 15px 10px;
-            font-size: 0.95rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
         }
 
         .form-control:focus {
@@ -188,24 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background: transparent;
         }
 
-        .forgot-link-wrapper {
-            text-align: right;
-            margin-top: 10px;
-            font-size: 0.85rem;
-        }
-
-        .forgot-link-wrapper a {
-            color: #666;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease;
-        }
-
-        .forgot-link-wrapper a:hover {
-            color: var(--theme-green);
-        }
-
-        .btn-login {
+        .btn-verify {
             background-color: var(--theme-dark);
             color: white;
             border: none;
@@ -213,14 +154,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             padding: 16px;
             width: 100%;
             font-weight: 700;
-            margin-top: 25px;
+            margin-top: 20px;
             transition: 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-size: 0.85rem;
         }
 
-        .btn-login:hover {
+        .btn-verify:hover {
             background-color: var(--theme-green);
             color: #fff;
             transform: translateY(-2px);
@@ -265,71 +206,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="brand-logo">
         <img src="../assets/logo.png" alt="Property Plus Logo">
     </div>
-    <h3 class="login-title">Partner Portal</h3>
-    <p class="login-subtitle">Access your listing management dashboard</p>
+    
+    <h3 class="login-title">Security Verification</h3>
+    <p class="login-subtitle">An OTP has been processed. Please enter the token below to verify.</p>
 
     <form method="POST">
         <div class="mb-4">
-            <label class="form-label">Phone Number</label>
+            <label class="form-label">Enter One-Time Password (OTP)</label>
             <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-mobile-screen-button"></i></span>
-                <input name="phone" type="text" class="form-control" placeholder="9876543210" required>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Security Key</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
                 <input 
-                    name="password"
-                    type="password"
-                    class="form-control"
-                    id="passwordField"
-                    placeholder="••••••••"
+                    name="otp" 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="••••••" 
+                    maxlength="10"
                     required
+                    autocomplete="one-time-code"
                 >
-                <button 
-                    type="button"
-                    class="input-group-text bg-white"
-                    onclick="togglePassword()"
-                    style="cursor:pointer;"
-                >
-                    <i class="fa-solid fa-eye" id="toggleIcon"></i>
-                </button>
-            </div>
-            
-            <div class="forgot-link-wrapper">
-                <a href="forgot_password.php">Forgot Password?</a>
             </div>
         </div>
 
-        <button type="submit" class="btn-login">
-            Secure Sign In
+        <button type="submit" class="btn-verify">
+            Verify OTP
         </button>
     </form>
     
     <div class="footer-link">
-        Not a partner yet? <a href="register.php">Create Account</a>
+        Aborted execution? <a href="login.php">Back to Login</a>
     </div>
 </div>
-
-<script>
-function togglePassword() {
-    let passwordField = document.getElementById('passwordField');
-    let toggleIcon = document.getElementById('toggleIcon');
-
-    if (passwordField.type === "password") {
-        passwordField.type = "text";
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-    } else {
-        passwordField.type = "password";
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-    }
-}
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
