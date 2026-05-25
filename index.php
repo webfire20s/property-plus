@@ -99,8 +99,12 @@ $sql = "
         u.business_name,
         u.state,
         u.district,
+        u.profile_photo,
+
         COUNT(DISTINCT p.id) as total_properties,
+
         COALESCE(m.name, 'Listing') as membership_name,
+
         CASE LOWER(COALESCE(m.name, 'listing'))
             WHEN 'platinum' THEN 5
             WHEN 'gold' THEN 4
@@ -108,10 +112,13 @@ $sql = "
             WHEN 'basic' THEN 2
             ELSE 1
         END as membership_priority
+
     FROM users u
+
     LEFT JOIN properties p 
         ON p.user_id = u.id
         AND p.status='approved'
+
     LEFT JOIN user_memberships um
         ON um.id = (
             SELECT um2.id
@@ -121,19 +128,25 @@ $sql = "
             ORDER BY um2.id DESC
             LIMIT 1
         )
+
     LEFT JOIN memberships m
         ON m.id = um.membership_id
+
     WHERE " . implode(" AND ", $userWhere) . "
+
     GROUP BY 
         u.id,
         u.business_name,
         u.state,
         u.district,
+        u.profile_photo,
         m.name
+
     ORDER BY
         membership_priority DESC,
         total_properties DESC,
         u.id DESC
+
     LIMIT $limit OFFSET $offset
 ";
 
@@ -165,57 +178,64 @@ $categories = [
     'Commercial Building', 'Commercial Shop', 'Commercial Showroom',
     'Commercial Floor', 'Land', 'Commercial Land', 'Agricultural Land'
 ];
+// Fetch admin-managed hero sliders
+$sliderStmt = $pdo->prepare("SELECT * FROM hero_slides ORDER BY id ASC LIMIT 6");
+$sliderStmt->execute();
+$adminSlides = $sliderStmt->fetchAll();
+
+// If the admin hasn't uploaded images yet, fallback to your original theme images seamlessly
+if (empty($adminSlides)) {
+    $slidesToShow = [
+        ['image_path' => 'https://cf.bstatic.com/xdata/images/hotel/max1024x768/659933963.jpg?k=d38117fb188c0d5a55a091a75703d3b915a1ee5de4bc9758833964156351dba5&o='],
+        ['image_path' => 'assets/img/slide-2.jpg'],
+        ['image_path' => 'assets/img/slide-3.jpg'],
+        ['image_path' => 'assets/img/slide-1.jpg']
+    ];
+} else {
+    $slidesToShow = [];
+    foreach ($adminSlides as $as) {
+        // Appends the upload directory prefix if your admin table stores just the file names
+        $slidesToShow[] = ['image_path' => 'uploads/hero/' . $as['image_path']];
+    }
+}
 ?>
 
 <style>
-    .hero-section {
-        margin-top: 90px;
-        padding: 100px 0 160px 0;
+    /* Full Viewport Slider Wrapper */
+    .hero-slider-viewport {
         position: relative;
+        /* height: 75vh; Perfect cinematic height for the pure slider canvas */
+        min-height: 700px;
+        width: 100%;
         overflow: hidden;
         background-color: #000000;
+        
     }
 
-    /* Hero CSS Sliding Layers Engine */
-    .hero-sliding-bg {
+    .hero-slider-viewport .carousel,
+    .hero-slider-viewport .carousel-inner,
+    .hero-slider-viewport .carousel-item {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Elegant bottom fading mask to transition smoothly into the light content area */
+    .hero-slider-viewport .hero-sliding-mask {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-size: cover;
-        background-position: center;
-        opacity: 0;
-        z-index: 0;
-        animation: heroFadeSlider 16s infinite linear;
-    }
-
-    @keyframes heroFadeSlider {
-        0% { opacity: 0; transform: scale(1); }
-        5% { opacity: 1; }
-        25% { opacity: 1; }
-        30% { opacity: 0; transform: scale(1.04); }
-        100% { opacity: 0; }
-    }
-
-    /* High-contrast gradient overlay ensuring light text stays perfectly readable */
-    .hero-sliding-mask {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(to right, rgba(15, 23, 42, 0.95) 40%, rgba(15, 23, 42, 0.75) 70%, rgba(15, 23, 42, 0.4) 100%);
+        background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.4) 70%, #f8fafc 100%);
         z-index: 1;
     }
 
-    @media (max-width: 991px) {
-        .hero-section {
-            padding: 60px 0 120px 0;
-        }
-        .hero-sliding-mask {
-            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%);
-        }
+    /* Content Area Below Slider */
+    .hero-content-section {
+        background-color: #f8fafc; /* Aligns with your platform background token */
+        padding: 30px 0 40px 0;
+        position: relative;
+        z-index: 10;
     }
 
     /* EstateAgency Geometric Card Hover Dynamics */
@@ -242,93 +262,132 @@ $categories = [
         color: #ffffff !important;
         border-color: #000000 !important;
     }
+
+    /* Custom form styling elements matching your standard */
+    .filter-input-group {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f1f5f9;
+        transition: all 0.2s ease;
+    }
+    .filter-input-group:focus-within {
+        border-color: #2eca6a;
+        box-shadow: 0 0 0 3px rgba(46, 202, 106, 0.15);
+    }
+
+    @media (max-width: 991px) {
+        .hero-slider-viewport {
+            height: 50vh;
+            min-height: 350px;
+        }
+        .hero-content-section {
+            padding: 40px 0 60px 0;
+        }
+    }
 </style>
 
-<section class="hero-section">
-    <div class="hero-sliding-bg" style="background-image: url('https://cf.bstatic.com/xdata/images/hotel/max1024x768/659933963.jpg?k=d38117fb188c0d5a55a091a75703d3b915a1ee5de4bc9758833964156351dba5&o=');"></div>
-    <div class="hero-sliding-bg" style="background-image: url('assets/img/slide-2.jpg'); animation-delay: 3s;"></div>
-    <div class="hero-sliding-bg" style="background-image: url('assets/img/slide-3.jpg'); animation-delay: 6s;"></div>
-    <div class="hero-sliding-bg" style="background-image: url('assets/img/slide-1.jpg'); animation-delay: 9s;"></div>
-    
+<section class="hero-slider-viewport">
+    <div id="heroSlider" class="carousel slide carousel-fade position-absolute top-0 start-0 w-100 h-100" data-bs-ride="carousel" data-bs-interval="4000" style="z-index: 1;">
+        <div class="carousel-inner">
+            <?php foreach($slidesToShow as $index => $slide): ?>
+                <div class="carousel-item <?= ($index === 0) ? 'active' : '' ?>">
+                    <div style="background-image: url('<?= $slide['image_path'] ?>'); background-size: cover; background-position: center; width: 100%; height: 100%;"></div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
     <div class="hero-sliding-mask"></div>
+</section>
 
-    <div class="container position-relative" style="z-index: 2;">
+<section class="hero-content-section">
+    <div class="container">
+        
         <div class="row align-items-center mb-5">
-            <div class="col-lg-7" data-aos="fade-right">
-                <div class="brand-badge mb-3" style="display: inline-block; background: rgba(46, 202, 106, 0.15); color: #2eca6a; padding: 6px 18px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(46,202,106,0.3);">
+            <div class="col-lg-8" data-aos="fade-right">
+                <div class="brand-badge mb-3" style="display: inline-block; background: rgba(46, 202, 106, 0.12); color: #2eca6a; padding: 6px 18px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(46,202,106,0.25);">
                     <i class="fa-solid fa-house-circle-check me-2"></i>Verified Ecosystem
                 </div>
                 
-                <h1 class="hero-title mb-3" style="font-weight: 800; font-size: 3.5rem; color: #ffffff; line-height: 1.2;">
-                    A Platform <span style="color: #2eca6a;">Designed</span> for <br>Real Estate <span style="color: #fdb913;">Professionals.</span>
+                <h1 class="hero-title mb-3" style="font-weight: 800; font-size: calc(1.8rem + 1.2vw); color: #0f172a; line-height: 1.2; letter-spacing: -0.5px;">
+                    A Platform <span style="color: #2eca6a;">Designed</span> for <br>Real Estate <span style="color: #ea580c;">Professionals.</span>
                 </h1>
                 
-                <p class="text-light opacity-75 mb-4" style="font-size: 1.2rem; max-width: 600px; line-height: 1.7; font-weight: 400;">
+                <p class="text-secondary mb-4" style="font-size: calc(0.95rem + 0.1vw); max-width: 700px; line-height: 1.6; font-weight: 400;">
                     Property Plus is a membership-based platform designed for builders, brokers, agents, and freelancers to connect, showcase opportunities, and operate within a verified real estate ecosystem.
                 </p>
                 
-                <div class="d-flex gap-3">
-                    <a href="auth/register.php" class="btn btn-success px-4 py-3 shadow-lg" style="background: #2eca6a; border: none; font-weight: 700; border-radius: 12px; transition: transform 0.2s;">Register Now</a>
-                    <a href="#property-listings" class="btn btn-outline-light px-4 py-3" style="border-radius: 12px; font-weight: 600;">Explore Listings</a>
+                <div class="d-flex gap-2 gap-sm-3">
+                    <a href="auth/register.php" class="btn btn-success px-4 py-2.5 shadow-sm" style="background: #2eca6a; border: none; font-weight: 700; border-radius: 12px; transition: transform 0.2s; font-size: 0.9rem;">Register Now</a>
+                    <a href="#property-listings" class="btn btn-outline-dark px-4 py-2.5" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem; border-color: #cbd5e1; color: #334155;">Explore Listings</a>
                 </div>
             </div>
             
-            <div class="col-lg-5 d-none d-lg-block">
-                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 30px; border-radius: 30px; display: inline-block; float: right;" data-aos="zoom-in">
+            <div class="col-lg-4 d-none d-lg-block">
+                <div class="border" style="background: #ffffff; border-color: #e2e8f0 !important; padding: 30px; border-radius: 24px; display: inline-block; float: right; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);" data-aos="zoom-in">
                     <div class="text-center">
-                        <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff;">100%</div>
-                        <div style="font-weight: 700; color: #2eca6a; text-transform: uppercase; font-size: 0.8rem;">Verified Listings</div>
+                        <div style="font-size: 2.75rem; font-weight: 800; color: #0f172a; letter-spacing: -1px;">100%</div>
+                        <div style="font-weight: 700; color: #2eca6a; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;">Verified Listings</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="filter-card mx-auto shadow-lg" style="max-width: 1000px; background: #fff; padding: 30px; border-radius: 20px; margin-top: -30px; position: relative; z-index: 1000; border: 1px solid #e2e8f0;">
+        <div class="filter-card shadow-sm bg-white" style="width: 100%; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0;">
             <div class="mb-3 ps-1">
-                <span class="fw-bold" style="font-size: 0.9rem; color: #64748b;"><i class="fa-solid fa-sliders me-2"></i>Filter Property Search</span>
+                <span class="fw-700" style="font-size: 0.85rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-sliders me-2 text-primary"></i>Filter Property Search</span>
             </div>
-            <form method="GET" class="row g-3">
+            <form method="GET" class="row g-2 g-sm-3">
                 <div class="col-md-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0"><i class="fa-solid fa-location-dot text-muted"></i></span>
-                        <input name="city" class="form-control border-0 bg-light" style="height: 45px;" placeholder="Search City..." value="<?= $_GET['city'] ?? '' ?>">
+                    <div class="input-group filter-input-group">
+                        <span class="input-group-text border-0 bg-transparent ps-3"><i class="fa-solid fa-location-dot text-muted"></i></span>
+                        <input name="city" class="form-control border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b;" placeholder="Search City..." value="<?= $_GET['city'] ?? '' ?>">
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <select name="category" class="form-select border-0 bg-light" style="height: 45px;">
-                        <option value="">Category</option>
-                        <?php foreach($categories as $cat): ?>
-                            <option value="<?= $cat ?>" <?= (($_GET['category'] ?? '')==$cat)?'selected':'' ?>>
-                                <?= $cat ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="filter-input-group">
+                        <select name="category" class="form-select border-0 bg-transparent style-fallback" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;">
+                            <option value="">Category</option>
+                            <?php foreach($categories as $cat): ?>
+                                <option value="<?= $cat ?>" <?= (($_GET['category'] ?? '')==$cat)?'selected':'' ?>>
+                                    <?= $cat ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <select name="purpose" class="form-select border-0 bg-light" style="height: 45px;">
-                        <option value="">Purpose</option>
-                        <option value="lease" <?= (($_GET['purpose'] ?? '')=='lease')?'selected':'' ?>>Lease</option>
-                        <option value="sell" <?= (($_GET['purpose'] ?? '')=='sell')?'selected':'' ?>>Sell</option>
-                        <option value="rent" <?= (($_GET['purpose'] ?? '')=='rent')?'selected':'' ?>>Rent</option>
-                    </select>
+                    <div class="filter-input-group">
+                        <select name="purpose" class="form-select border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;">
+                            <option value="">Purpose</option>
+                            <option value="lease" <?= (($_GET['purpose'] ?? '')=='lease')?'selected':'' ?>>Lease</option>
+                            <option value="sell" <?= (($_GET['purpose'] ?? '')=='sell')?'selected':'' ?>>Sell</option>
+                            <option value="rent" <?= (($_GET['purpose'] ?? '')=='rent')?'selected':'' ?>>Rent</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <input type="number" name="min_price" class="form-control border-0 bg-light" style="height: 45px;" placeholder="Min ₹">
+                    <div class="filter-input-group">
+                        <input type="number" name="min_price" class="form-control border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;" placeholder="Min ₹">
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <input type="number" name="max_price" class="form-control border-0 bg-light" style="height: 45px;" placeholder="Max ₹">
+                    <div class="filter-input-group">
+                        <input type="number" name="max_price" class="form-control border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;" placeholder="Max ₹">
+                    </div>
                 </div>
                 <div class="col-md-1">
-                    <button class="btn btn-success w-100" style="background: #2eca6a; border: none; height: 45px;">
-                        <i class="fa-solid fa-magnifying-glass"></i>
+                    <button class="btn btn-success w-100 d-flex align-items-center justify-content-center" style="background: #2eca6a; border: none; height: 48px; border-radius: 12px; transition: background 0.2s;">
+                        <i class="fa-solid fa-magnifying-glass fs-5"></i>
                     </button>
                 </div>
             </form>
         </div>
+
     </div>
 </section>
 
-<section id="property-listings" class="section-property section-t8 py-5" style="background: linear-gradient(180deg, #f7f7f7 0%, #a8f3c5 10%, #f2faf5 100%);">
+<section id="property-listings" class="section-property section-t8 py-5" style="background: linear-gradient(180deg, #f7f7f7 0%, #cff5df 1%, #f2faf5 100%);">
     <div class="container">
         <div class="row mb-5">
             <div class="col-md-12 col-lg-8">
@@ -347,10 +406,10 @@ $categories = [
             </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-3 g-sm-4">
             <?php if(count($users) > 0): ?>
                 <?php foreach($users as $u): ?>
-                    <div class="col-12 col-md-6 col-lg-4">
+                    <div class="col-6 col-md-6 col-lg-4">
                         <?php
                         $membership = strtolower($u['membership_name']);
                         $tierBadgeBg = '#2eca6a'; 
@@ -365,7 +424,7 @@ $categories = [
                         <div class="card border-0 theme-grid-box"
                              style="border-radius: 0px; background: #ffffff; border: 1px solid #ebebeb !important; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column;">
                             
-                            <div class="p-4 position-relative" style="background: #ffffff; flex-grow: 1;">
+                            <div class="p-3 p-sm-4 position-relative" style="background: #ffffff; flex-grow: 1;">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <span class="badge text-white px-2.5 py-1.5" style="background: <?= $tierBadgeBg ?>; border-radius: 0px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
                                         <?= htmlspecialchars($u['membership_name']) ?>
@@ -373,31 +432,94 @@ $categories = [
                                     <span style="color: #2eca6a; font-size: 1.1rem;"><i class="fa-solid fa-circle-check"></i></span>
                                 </div>
                                 
-                                <h4 class="fw-bold text-dark mb-1 text-truncate" style="font-family: 'Poppins', sans-serif; font-size: 1.3rem; letter-spacing: -0.5px;">
+                                <h4 class="fw-bold text-dark mb-1 text-truncate" style="font-family: 'Poppins', sans-serif; font-size: calc(0.9rem + 0.5vw); letter-spacing: -0.5px;">
                                     <?= htmlspecialchars($u['business_name']) ?>
                                 </h4>
-                                
-                                <p class="text-muted mb-0 text-truncate small" style="font-family: 'Poppins', sans-serif;">
-                                    <i class="fa-solid fa-location-dot me-1 text-success"></i><?= htmlspecialchars($u['district']) ?>, <?= htmlspecialchars($u['state']) ?>
+                                                                
+                                <p class="text-muted mb-0 small text-truncate" style="font-size: 0.7rem; font-family: 'Poppins', sans-serif;">
+                                    <i class="fa-solid fa-location-dot me-1 text-success" style="font-size: 0.75rem;"></i><?= htmlspecialchars($u['district']) ?>, <?= htmlspecialchars($u['state']) ?>
                                 </p>
                             </div>
 
-                            <div class="p-4 pt-0" style="background: #ffffff;">
-                                <div class="d-flex justify-content-between align-items-center py-2.5 mb-3" style="border-top: 1px dashed #ebebeb; border-bottom: 1px dashed #ebebeb;">
-                                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">Active Portfolio</span>
-                                    <span class="fw-bold text-dark" style="font-size: 1rem; font-family: 'Poppins', sans-serif;">
+                            <div class="p-3 p-sm-4 pt-0" style="background: #ffffff;">
+
+                                <!-- USER PHOTO -->
+                                <div class="text-center mb-3">
+
+                                    <?php if(!empty($u['profile_photo'])): ?>
+
+                                        <img src="uploads/profile_photos/<?= htmlspecialchars($u['profile_photo']) ?>"
+                                            alt="Profile Photo"
+                                            style="
+                                                width: 75px;
+                                                height: 75px;
+                                                object-fit: cover;
+                                                border-radius: 50%;
+                                                border: 3px solid #f3f4f6;
+                                                box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+                                            ">
+
+                                    <?php else: ?>
+
+                                        <div style="
+                                            width: 75px;
+                                            height: 75px;
+                                            border-radius: 50%;
+                                            background: #f3f4f6;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            margin: auto;
+                                            border: 3px solid #f3f4f6;
+                                        ">
+                                            <i class="fa-solid fa-user text-secondary" style="font-size: 1.6rem;"></i>
+                                        </div>
+
+                                    <?php endif; ?>
+
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center py-2.5 mb-3"
+                                    style="border-top: 1px dashed #ebebeb; border-bottom: 1px dashed #ebebeb;">
+
+                                    <span class="text-secondary small fw-bold text-uppercase"
+                                        style="letter-spacing: 0.5px; font-size: 0.65rem;">
+                                        Portfolio
+                                    </span>
+
+                                    <span class="fw-bold text-dark"
+                                        style="font-size: 0.7rem; font-family: 'Poppins', sans-serif;">
                                         <?= $u['total_properties'] ?> Properties
                                     </span>
+
                                 </div>
 
                                 <div class="mt-2">
                                     <a href="partner_properties.php?user_id=<?= $u['id'] ?>"
-                                       class="btn btn-theme-block w-100 d-flex align-items-center justify-content-center gap-2"
-                                       style="background: #000000; border: none; border-radius: 0px; font-weight: 700; padding: 13px; color: #ffffff; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-family: 'Poppins', sans-serif; transition: all 0.25s ease;">
-                                        View Properties
-                                        <i class="fa-solid fa-chevron-right style-arrow" style="font-size: 0.7rem; transition: transform 0.2s ease;"></i>
+                                    class="btn btn-theme-block w-100 d-flex align-items-center justify-content-center gap-2"
+                                    style="
+                                            background: #000000;
+                                            border: none;
+                                            border-radius: 0px;
+                                            font-weight: 600;
+                                            padding: 07px 5px;
+                                            color: #ffffff;
+                                            text-transform: uppercase;
+                                            font-size: 0.7rem;
+                                            letter-spacing: 0.5px;
+                                            font-family: 'Poppins', sans-serif;
+                                            transition: all 0.25s ease;
+                                    ">
+
+                                        <span class="d-none d-sm-inline">View Properties</span>
+                                        <span class="d-inline d-sm-none">View</span>
+
+                                        <i class="fa-solid fa-chevron-right style-arrow"
+                                        style="font-size: 0.65rem; transition: transform 0.2s ease;"></i>
+
                                     </a>
                                 </div>
+
                             </div>
                         </div>
                     </div>

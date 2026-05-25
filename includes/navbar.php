@@ -40,6 +40,28 @@ $base_url = $_ENV['BASE_URL'] ?? '/';
         color: #fff !important;
     }
     .logout-icon { color: #ef4444 !important; font-size: 1.2rem; }
+
+    /* ==========================================================================
+       THE GLOBAL NAVBAR STACKING FIX
+       ========================================================================== */
+    
+    /* Overrides the conflicting template transparency overlay configurations */
+    #header.header {
+        background-color: #ffffff !important;
+        box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.06) !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        transition: all 0.3s ease !important;
+    }
+
+    /* Force the main content body canvas context to drop explicitly below header footprint */
+    @media (min-width: 992px) {
+        body.index-page {
+            padding-top: 80px !important; /* Smooth block layout pusher for laptop screens */
+        }
+    }
   </style>
 </head>
 

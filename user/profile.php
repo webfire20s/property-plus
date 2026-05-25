@@ -18,6 +18,39 @@ if (isset($_POST['update_profile'])) {
     $district = trim($_POST['district'] ?? '');
     $rera = trim($_POST['rera'] ?? '');
     $gst = strtoupper(trim($_POST['gst'] ?? ''));
+        // ================= PROFILE PHOTO =================
+    $profile_photo = $user['profile_photo'] ?? null;
+
+    if (!empty($_FILES['profile_photo']['name'])) {
+
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+        $ext = strtolower(pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION));
+
+        if (!in_array($ext, $allowed)) {
+
+            $error = "Only JPG, PNG and WEBP images are allowed.";
+
+        } else {
+
+            $newPhotoName = time() . rand(1000,9999) . "." . $ext;
+
+            if (move_uploaded_file(
+                $_FILES['profile_photo']['tmp_name'],
+                "../uploads/profile_photos/" . $newPhotoName
+            )) {
+
+                // delete old photo
+                if (!empty($user['profile_photo']) &&
+                    file_exists("../uploads/profile_photos/" . $user['profile_photo'])) {
+
+                    unlink("../uploads/profile_photos/" . $user['profile_photo']);
+                }
+
+                $profile_photo = $newPhotoName;
+            }
+        }
+    }
 
     // GST validation
     if (!empty($gst)) {
@@ -36,7 +69,8 @@ if (isset($_POST['update_profile'])) {
                 state = ?, 
                 district = ?, 
                 rera_number = ?, 
-                gst_number = ?
+                gst_number = ?,
+                profile_photo = ?
             WHERE id = ?
         ");
 
@@ -46,6 +80,7 @@ if (isset($_POST['update_profile'])) {
             $district,
             $rera,
             $gst,
+            $profile_photo,
             $user_id
         ]);
 
@@ -283,6 +318,19 @@ if (isset($_GET['updated']) && $_GET['updated'] == 1) {
         border: none;
         font-weight: 600;
     }
+    .profile-photo-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #2eca6a;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.photo-upload-box {
+    text-align: center;
+    margin-bottom: 30px;
+}
 </style>
 
 <div class="container container-box">
@@ -306,8 +354,40 @@ if (isset($_GET['updated']) && $_GET['updated'] == 1) {
     <div class="card-custom shadow-sm">
         <h5 class="section-title">Profile Information</h5>
 
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <div class="row g-4">
+                <div class="col-12">
+
+                    <div class="photo-upload-box">
+
+                        <?php if (!empty($user['profile_photo'])): ?>
+
+                            <img 
+                                src="../uploads/profile_photos/<?= htmlspecialchars($user['profile_photo']) ?>"
+                                class="profile-photo-preview mb-3"
+                            >
+
+                        <?php else: ?>
+
+                            <div class="profile-photo-preview mb-3 d-flex align-items-center justify-content-center bg-light mx-auto">
+                                <i class="fa-solid fa-user fa-2x text-secondary"></i>
+                            </div>
+
+                        <?php endif; ?>
+
+                        <div class="mt-2">
+                            <label class="form-label fw-bold">Profile Photo</label>
+                            <input 
+                                type="file"
+                                name="profile_photo"
+                                class="form-control"
+                                accept=".jpg,.jpeg,.png,.webp"
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Phone (Login ID)</label>
