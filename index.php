@@ -444,40 +444,42 @@ if (empty($adminSlides)) {
                             <div class="p-3 p-sm-4 pt-0" style="background: #ffffff;">
 
                                 <!-- USER PHOTO -->
-                                <div class="text-center mb-3">
+                            <div class="text-center mb-3">
 
-                                    <?php if(!empty($u['profile_photo'])): ?>
+                                <?php if(!empty($u['profile_photo'])): ?>
 
-                                        <img src="uploads/profile_photos/<?= htmlspecialchars($u['profile_photo']) ?>"
-                                            alt="Profile Photo"
-                                            style="
-                                                width: 75px;
-                                                height: 75px;
-                                                object-fit: cover;
-                                                border-radius: 50%;
-                                                border: 3px solid #f3f4f6;
-                                                box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-                                            ">
-
-                                    <?php else: ?>
-
-                                        <div style="
+                                    <img src="uploads/profile_photos/<?= htmlspecialchars($u['profile_photo']) ?>"
+                                        alt="Profile Photo"
+                                        style="
                                             width: 75px;
                                             height: 75px;
-                                            border-radius: 50%;
-                                            background: #f3f4f6;
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
-                                            margin: auto;
+                                            object-fit: contain;
+                                            border-radius: 0px;
                                             border: 3px solid #f3f4f6;
+                                            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+                                            background: #ffffff;
+                                            padding: 3px;
                                         ">
-                                            <i class="fa-solid fa-user text-secondary" style="font-size: 1.6rem;"></i>
-                                        </div>
 
-                                    <?php endif; ?>
+                                <?php else: ?>
 
-                                </div>
+                                    <div style="
+                                        width: 75px;
+                                        height: 75px;
+                                        border-radius: 0px;
+                                        background: #f3f4f6;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        margin: auto;
+                                        border: 3px solid #f3f4f6;
+                                    ">
+                                        <i class="fa-solid fa-user text-secondary" style="font-size: 1.6rem;"></i>
+                                    </div>
+
+                                <?php endif; ?>
+
+                            </div>
 
                                 <div class="d-flex justify-content-between align-items-center py-2.5 mb-3"
                                     style="border-top: 1px dashed #ebebeb; border-bottom: 1px dashed #ebebeb;">
