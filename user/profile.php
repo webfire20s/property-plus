@@ -407,7 +407,7 @@ if (isset($_GET['updated']) && $_GET['updated'] == 1) {
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">District</label>
+                    <label class="form-label">Full Address</label>
                     <input name="district" class="form-control" 
                         value="<?= htmlspecialchars($user['district'] ?? '') ?>">
                 </div>

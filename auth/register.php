@@ -317,8 +317,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input name="state" class="form-control" placeholder="State"  required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">District</label>
-                            <input name="district" class="form-control" placeholder="District/City" required>
+                            <label class="form-label">Full Address</label>
+                            <input name="district" class="form-control" placeholder="Full Address" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">RERA Number (Optional)</label>
