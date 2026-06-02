@@ -435,7 +435,7 @@ if (empty($adminSlides)) {
                                 <h4 class="fw-bold text-dark mb-1 text-truncate" style="font-family: 'Poppins', sans-serif; font-size: calc(0.9rem + 0.5vw); letter-spacing: -0.5px;">
                                     <?= htmlspecialchars($u['business_name']) ?>
                                 </h4>
-                                                                
+                                                                            
                                 <p class="text-muted mb-0 small text-truncate" style="font-size: 0.7rem; font-family: 'Poppins', sans-serif;">
                                     <i class="fa-solid fa-location-dot me-1 text-success" style="font-size: 0.75rem;"></i><?= htmlspecialchars($u['district']) ?>, <?= htmlspecialchars($u['state']) ?>
                                 </p>
@@ -443,57 +443,45 @@ if (empty($adminSlides)) {
 
                             <div class="p-3 p-sm-4 pt-0" style="background: #ffffff;">
 
-                                <!-- USER PHOTO -->
-                            <div class="text-center mb-3">
-
-                                <?php if(!empty($u['profile_photo'])): ?>
-
-                                    <img src="uploads/profile_photos/<?= htmlspecialchars($u['profile_photo']) ?>"
-                                        alt="Profile Photo"
-                                        style="
+                                <div class="text-center mb-3">
+                                    <?php if(!empty($u['profile_photo'])): ?>
+                                        <img src="uploads/profile_photos/<?= htmlspecialchars($u['profile_photo']) ?>"
+                                            alt="Profile Photo"
+                                            style="
+                                                width: 75px;
+                                                height: 75px;
+                                                object-fit: contain;
+                                                border-radius: 0px;
+                                                border: 3px solid #f3f4f6;
+                                                box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+                                                background: #ffffff;
+                                                padding: 3px;
+                                            ">
+                                    <?php else: ?>
+                                        <div style="
                                             width: 75px;
                                             height: 75px;
-                                            object-fit: contain;
                                             border-radius: 0px;
+                                            background: #f3f4f6;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            margin: auto;
                                             border: 3px solid #f3f4f6;
-                                            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-                                            background: #ffffff;
-                                            padding: 3px;
                                         ">
-
-                                <?php else: ?>
-
-                                    <div style="
-                                        width: 75px;
-                                        height: 75px;
-                                        border-radius: 0px;
-                                        background: #f3f4f6;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        margin: auto;
-                                        border: 3px solid #f3f4f6;
-                                    ">
-                                        <i class="fa-solid fa-user text-secondary" style="font-size: 1.6rem;"></i>
-                                    </div>
-
-                                <?php endif; ?>
-
-                            </div>
+                                            <i class="fa-solid fa-user text-secondary" style="font-size: 1.6rem;"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
 
                                 <div class="d-flex justify-content-between align-items-center py-2.5 mb-3"
                                     style="border-top: 1px dashed #ebebeb; border-bottom: 1px dashed #ebebeb;">
-
-                                    <span class="text-secondary small fw-bold text-uppercase"
-                                        style="letter-spacing: 0.5px; font-size: 0.65rem;">
+                                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.65rem;">
                                         Portfolio
                                     </span>
-
-                                    <span class="fw-bold text-dark"
-                                        style="font-size: 0.7rem; font-family: 'Poppins', sans-serif;">
+                                    <span class="fw-bold text-dark" style="font-size: 0.7rem; font-family: 'Poppins', sans-serif;">
                                         <?= $u['total_properties'] ?> Properties
                                     </span>
-
                                 </div>
 
                                 <div class="mt-2">
@@ -512,13 +500,9 @@ if (empty($adminSlides)) {
                                             font-family: 'Poppins', sans-serif;
                                             transition: all 0.25s ease;
                                     ">
-
                                         <span class="d-none d-sm-inline">View Properties</span>
                                         <span class="d-inline d-sm-none">View</span>
-
-                                        <i class="fa-solid fa-chevron-right style-arrow"
-                                        style="font-size: 0.65rem; transition: transform 0.2s ease;"></i>
-
+                                        <i class="fa-solid fa-chevron-right style-arrow" style="font-size: 0.65rem; transition: transform 0.2s ease;"></i>
                                     </a>
                                 </div>
 
@@ -539,18 +523,69 @@ if (empty($adminSlides)) {
     </div>
 
     <?php if($totalPages > 1): ?>
+        <?php
+        // Build base dynamic query string to append safely to links
+        $queryString = '';
+        if(!empty($_GET['city']))     $queryString .= '&city=' . urlencode($_GET['city']);
+        if(!empty($_GET['category'])) $queryString .= '&category=' . urlencode($_GET['category']);
+        if(!empty($_GET['purpose']))  $queryString .= '&purpose=' . urlencode($_GET['purpose']);
+
+        // Determine calculation parameters for current sliding window bounds
+        $range = 2; 
+        $initial_page_loop = max(1, $page - $range);
+        $terminal_page_loop = min($totalPages, $page + $range);
+        ?>
         <div class="container mt-5">
-            <nav class="d-flex justify-content-center">
-                <ul class="pagination" style="border-radius: 0px; box-shadow: none;">
-                    <?php for($i = 1; $i <= $totalPages; $i++): ?>
-                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>" style="margin: 0 3px;">
-                            <a class="page-link template-pagination-link"
-                               href="?page=<?= $i ?><?php if(!empty($_GET['city'])): ?>&city=<?= urlencode($_GET['city']) ?><?php endif; ?><?php if(!empty($_GET['category'])): ?>&category=<?= urlencode($_GET['category']) ?><?php endif; ?><?php if(!empty($_GET['purpose'])): ?>&purpose=<?= urlencode($_GET['purpose']) ?><?php endif; ?>"
-                               style="padding: 12px 18px; font-weight: 600; font-size: 0.85rem; border: 1px solid #ebebeb; color: #000000; background: #ffffff; border-radius: 0px; transition: all 0.2s ease;">
+            <nav class="d-flex justify-content-center align-items-center flex-wrap">
+                <ul class="pagination flex-wrap justify-content-center align-items-center" style="border-radius: 0px; box-shadow: none; margin: 0; padding: 0;">
+                    
+                    <?php if($page > 1): ?>
+                        <li class="page-item" style="margin: 2px;">
+                            <a class="page-link template-pagination-link" href="?page=1<?= $queryString ?>" style="padding: 10px 14px; font-weight: 600; font-size: 0.82rem; border: 1px solid #ebebeb; color: #000000; background: #ffffff; border-radius: 0px; transition: all 0.2s ease;" title="First Page">
+                                <i class="fa-solid fa-angles-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item" style="margin: 2px;">
+                            <a class="page-link template-pagination-link" href="?page=<?= $page - 1 ?><?= $queryString ?>" style="padding: 10px 14px; font-weight: 600; font-size: 0.82rem; border: 1px solid #ebebeb; color: #000000; background: #ffffff; border-radius: 0px; transition: all 0.2s ease;" title="Previous">
+                                <i class="fa-solid fa-angle-left"></i>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if($initial_page_loop > 1): ?>
+                        <li class="page-item disabled" style="margin: 2px;">
+                            <span class="page-link border-0 bg-transparent text-muted" style="padding: 10px 12px; font-weight: 600; font-size: 0.85rem;">...</span>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php for($i = $initial_page_loop; $i <= $terminal_page_loop; $i++): ?>
+                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>" style="margin: 2px;">
+                            <a class="page-link template-pagination-link" href="?page=<?= $i ?><?= $queryString ?>" 
+                               style="padding: 10px 16px; font-weight: 600; font-size: 0.85rem; border: 1px solid #ebebeb; <?= ($i == $page) ? 'background-color: #2eca6a !important; border-color: #2eca6a !important; color: #ffffff !important;' : 'color: #000000; background: #ffffff;' ?> border-radius: 0px; transition: all 0.2s ease;">
                                 <?= $i ?>
                             </a>
                         </li>
                     <?php endfor; ?>
+
+                    <?php if($terminal_page_loop < $totalPages): ?>
+                        <li class="page-item disabled" style="margin: 2px;">
+                            <span class="page-link border-0 bg-transparent text-muted" style="padding: 10px 12px; font-weight: 600; font-size: 0.85rem;">...</span>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if($page < $totalPages): ?>
+                        <li class="page-item" style="margin: 2px;">
+                            <a class="page-link template-pagination-link" href="?page=<?= $page + 1 ?><?= $queryString ?>" style="padding: 10px 14px; font-weight: 600; font-size: 0.82rem; border: 1px solid #ebebeb; color: #000000; background: #ffffff; border-radius: 0px; transition: all 0.2s ease;" title="Next">
+                                <i class="fa-solid fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item" style="margin: 2px;">
+                            <a class="page-link template-pagination-link" href="?page=<?= $totalPages ?><?= $queryString ?>" style="padding: 10px 14px; font-weight: 600; font-size: 0.82rem; border: 1px solid #ebebeb; color: #000000; background: #ffffff; border-radius: 0px; transition: all 0.2s ease;" title="Last Page">
+                                <i class="fa-solid fa-angles-right"></i>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
                 </ul>
             </nav>
         </div>
