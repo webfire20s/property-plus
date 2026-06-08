@@ -4,37 +4,41 @@ require '../config/db.php';
 
 // Logic remains untouched
 $stmt = $pdo->query("
-    SELECT 
+    SELECT
         p.id,
         p.user_id,
-        u.phone,
         p.amount,
         p.type,
         p.txn_id,
         p.status,
         p.created_at,
-        'razorpay' as source,
-        NULL as screenshot,
-        p.plan_id
+        p.plan_id,
+        u.business_name,
+        u.phone,
+        'razorpay' AS source,
+        NULL AS screenshot,
+        NULL AS rejection_reason
     FROM payments p
-    JOIN users u ON p.user_id = u.id
+    LEFT JOIN users u ON u.id = p.user_id
 
     UNION ALL
 
-        SELECT 
+    SELECT
         ps.id,
         ps.user_id,
-        u.phone,
         ps.amount,
         ps.type,
-        NULL as txn_id,
+        NULL AS txn_id,
         ps.status,
         ps.created_at,
-        'qr' as source,
+        ps.plan_id,
+        u.business_name,
+        u.phone,
+        'qr' AS source,
         ps.screenshot,
-        ps.plan_id
+        ps.rejection_reason
     FROM payment_screenshots ps
-    JOIN users u ON ps.user_id = u.id
+    LEFT JOIN users u ON u.id = ps.user_id
 
     ORDER BY created_at DESC
 ");

@@ -106,6 +106,7 @@ require '../config/db.php';
                                 <th>ID</th>
                                 <th>Partner Details</th>
                                 <th>Contact Info</th>
+                                <th>Address</th>
                                 <th>Status</th>
                                 <th class="text-end">Management</th>
                             </tr>
@@ -119,12 +120,21 @@ require '../config/db.php';
                         <tr>
                             <td class="text-secondary fw-bold">#<?= $u['id'] ?></td>
                             <td>
-                                <div class="fw-bold text-dark mb-1"><?= htmlspecialchars($u['business_name'] ?? 'N/A') ?></div>
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-light text-muted border fw-normal" style="font-size: 0.65rem;">
-                                        RERA: <?= htmlspecialchars($u['rera_number'] ?? 'N/A') ?>
-                                    </span>
+
+                                <div class="fw-bold text-dark mb-2">
+                                    <?= htmlspecialchars($u['business_name'] ?? 'N/A') ?>
                                 </div>
+
+                                <div class="small text-muted mb-1">
+                                    <strong>RERA:</strong>
+                                    <?= !empty($u['rera_number']) ? htmlspecialchars($u['rera_number']) : 'N/A' ?>
+                                </div>
+
+                                <div class="small text-muted">
+                                    <strong>GST:</strong>
+                                    <?= !empty($u['gst_number']) ? htmlspecialchars($u['gst_number']) : 'N/A' ?>
+                                </div>
+
                             </td>
                             <td>
                                 <div class="fw-600 small mb-1">
@@ -133,6 +143,19 @@ require '../config/db.php';
                                 <div class="text-muted extra-small" style="font-size: 0.7rem;">
                                     <i class="fa-solid fa-envelope me-2"></i><?= htmlspecialchars($u['email'] ?? 'No Email') ?>
                                 </div>
+                            </td>
+                            <td style="max-width:250px;">
+                                
+                                <div class="small mb-1">
+                                    <i class="fa-solid fa-location-dot me-2 text-danger"></i>
+                                    <?= htmlspecialchars($u['district'] ?? 'N/A') ?>
+                                </div>
+
+                                <div class="small text-muted">
+                                    <i class="fa-solid fa-map me-2"></i>
+                                    <?= htmlspecialchars($u['state'] ?? 'N/A') ?>
+                                </div>
+
                             </td>
                             <td>
                                 <?php if ($u['status'] == 'pending'): ?>

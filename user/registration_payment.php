@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $pdo->prepare("
         INSERT INTO payment_screenshots (user_id, type, screenshot, amount)
-        VALUES (?, 'registration', ?, 1000)
+        VALUES (?, 'registration', ?, 120)
     ")->execute([$user_id, $filename]);
 
     header("Location: registration_payment.php");
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="payment-card shadow-lg" data-aos="fade-up">
 
         <div class="text-center mb-4">
-            <h4 class="fw-bold text-dark mb-1">Membership Verification</h4>
+            <h4 class="fw-bold text-dark mb-1">Registration Verification</h4>
             <p class="text-secondary small">Complete your registration to unlock all features</p>
         </div>
 
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <span class="fw-bold">yespay.smessi10062303@yesbankltd</span>
                 </div>
             </div>
-            <div class="amount-tag">₹1000</div>
+            <div class="amount-tag">₹120</div>
         </div>
 
         <?php if ($payment): ?>

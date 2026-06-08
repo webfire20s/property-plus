@@ -344,9 +344,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          Registration requires a one-time activation fee of <b>₹120</b>.
                      </div>
 
-                    <button type="button" onclick="startRegistrationPayment()" class="btn-register shadow-sm" id="registerBtn">
-                        Create Account
-                    </button>
+                    <div class="d-grid gap-2">
+
+                        <button type="button"
+                                onclick="startRegistrationPayment()"
+                                class="btn-register shadow-sm"
+                                id="registerBtn">
+                            Pay Online & Create Account
+                        </button>
+
+                        <button type="button"
+                                onclick="startQRRegistration()"
+                                class="btn btn-dark">
+                            Pay via QR & Submit Proof
+                        </button>
+
+                    </div>
 
                     <input type="hidden" name="payment_verified" id="payment_verified" value="0">
                     
@@ -498,5 +511,42 @@ function startRegistrationPayment() {
 }
 </script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+
+function startQRRegistration()
+{
+    const phone =
+        document.querySelector('[name=phone]').value.trim();
+
+    const password =
+        document.querySelector('[name=password]').value.trim();
+
+    const business =
+        document.querySelector('[name=business_name]').value.trim();
+
+    const state =
+        document.querySelector('[name=state]').value.trim();
+
+    const district =
+        document.querySelector('[name=district]').value.trim();
+
+    if(
+        !phone ||
+        !password ||
+        !business ||
+        !state ||
+        !district
+    ){
+        alert("Please fill all required fields first");
+        return;
+    }
+
+    document.getElementById('registerForm').action =
+        'save_registration_qr.php';
+
+    document.getElementById('registerForm').submit();
+}
+
+</script>
 </body>
 </html>

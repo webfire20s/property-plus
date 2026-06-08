@@ -7,49 +7,27 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 🔥 FILTER LOGIC (UNTOUCHED)
-$where = ["status='approved'"];
-$params = [];
+// $where = ["status IN ('active','approved')"];
+// $params = [];
 
-if (!empty($_GET['city'])) {
-    $where[] = "city LIKE ?";
-    $params[] = "%" . $_GET['city'] . "%";
-}
+// if (!empty($_GET['search'])) {
 
-if (!empty($_GET['type'])) {
-    $where[] = "property_type = ?";
-    $params[] = $_GET['type'];
-}
+//     $where[] = "(
+//         business_name LIKE ?
+//         OR district LIKE ?
+//         OR state LIKE ?
+//         OR phone LIKE ?
+//         OR rera_number LIKE ?
+//     )";
 
-if (!empty($_GET['category'])) {
-    $where[] = "category = ?";
-    $params[] = $_GET['category'];
-}
+//     $search = "%" . trim($_GET['search']) . "%";
 
-if (!empty($_GET['purpose'])) {
-    $where[] = "purpose = ?";
-    $params[] = $_GET['purpose'];
-}
-
-if (!empty($_GET['min_price'])) {
-    $where[] = "price >= ?";
-    $params[] = $_GET['min_price'];
-}
-
-if (!empty($_GET['max_price'])) {
-    $where[] = "price <= ?";
-    $params[] = $_GET['max_price'];
-}
-
-if (!empty($_GET['min_area'])) {
-    $where[] = "area >= ?";
-    $params[] = $_GET['min_area'];
-}
-
-if (!empty($_GET['max_area'])) {
-    $where[] = "area <= ?";
-    $params[] = $_GET['max_area'];
-}
-
+//     $params[] = $search;
+//     $params[] = $search;
+//     $params[] = $search;
+//     $params[] = $search;
+//     $params[] = $search;
+// }
 // ================= USERS FETCH =================
 // PAGINATION
 $limit = 12;
@@ -59,37 +37,26 @@ if ($page < 1) {
 }
 $offset = ($page - 1) * $limit;
 
-$userWhere = ["u.status='active'"];
+$userWhere = ["u.status IN ('active','approved')"];
 $userParams = [];
 
-if (!empty($_GET['city'])) {
-    $userWhere[] = "EXISTS (
-        SELECT 1 FROM properties p2
-        WHERE p2.user_id = u.id
-        AND p2.status='approved'
-        AND p2.city LIKE ?
-    )";
-    $userParams[] = "%" . $_GET['city'] . "%";
-}
+if (!empty($_GET['search'])) {
 
-if (!empty($_GET['category'])) {
-    $userWhere[] = "EXISTS (
-        SELECT 1 FROM properties p2
-        WHERE p2.user_id = u.id
-        AND p2.status='approved'
-        AND p2.category = ?
+    $userWhere[] = "(
+        u.business_name LIKE ?
+        OR u.district LIKE ?
+        OR u.state LIKE ?
+        OR u.phone LIKE ?
+        OR u.rera_number LIKE ?
     )";
-    $userParams[] = $_GET['category'];
-}
 
-if (!empty($_GET['purpose'])) {
-    $userWhere[] = "EXISTS (
-        SELECT 1 FROM properties p2
-        WHERE p2.user_id = u.id
-        AND p2.status='approved'
-        AND p2.purpose = ?
-    )";
-    $userParams[] = $_GET['purpose'];
+    $search = "%" . trim($_GET['search']) . "%";
+
+    $userParams[] = $search;
+    $userParams[] = $search;
+    $userParams[] = $search;
+    $userParams[] = $search;
+    $userParams[] = $search;
 }
 
 // MAIN USERS QUERY
@@ -333,55 +300,53 @@ if (empty($adminSlides)) {
             </div>
         </div>
 
-        <div class="filter-card shadow-sm bg-white" style="width: 100%; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0;">
+        <div class="filter-card shadow-sm bg-white"
+            style="width:100%;padding:24px;border-radius:20px;border:1px solid #e2e8f0;">
+
             <div class="mb-3 ps-1">
-                <span class="fw-700" style="font-size: 0.85rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-sliders me-2 text-primary"></i>Filter Property Search</span>
+                <span class="fw-700"
+                    style="font-size:0.85rem;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">
+                    <i class="fa-solid fa-users me-2 text-success"></i>
+                    Find Dealers & Agencies
+                </span>
             </div>
-            <form method="GET" class="row g-2 g-sm-3">
-                <div class="col-md-3">
+
+            <form method="GET" class="row g-3">
+
+                <div class="col-md-11">
+
                     <div class="input-group filter-input-group">
-                        <span class="input-group-text border-0 bg-transparent ps-3"><i class="fa-solid fa-location-dot text-muted"></i></span>
-                        <input name="city" class="form-control border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b;" placeholder="Search City..." value="<?= $_GET['city'] ?? '' ?>">
+
+                        <span class="input-group-text border-0 bg-transparent ps-3">
+                            <i class="fa-solid fa-users text-muted"></i>
+                        </span>
+
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control border-0 bg-transparent"
+                            placeholder="Search Dealers, Agencies, Address, State, Phone or RERA"
+                            value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
+                            style="height:48px;font-size:0.9rem;"
+                        >
+
                     </div>
+
                 </div>
-                <div class="col-md-2">
-                    <div class="filter-input-group">
-                        <select name="category" class="form-select border-0 bg-transparent style-fallback" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;">
-                            <option value="">Category</option>
-                            <?php foreach($categories as $cat): ?>
-                                <option value="<?= $cat ?>" <?= (($_GET['category'] ?? '')==$cat)?'selected':'' ?>>
-                                    <?= $cat ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="filter-input-group">
-                        <select name="purpose" class="form-select border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;">
-                            <option value="">Purpose</option>
-                            <option value="lease" <?= (($_GET['purpose'] ?? '')=='lease')?'selected':'' ?>>Lease</option>
-                            <option value="sell" <?= (($_GET['purpose'] ?? '')=='sell')?'selected':'' ?>>Sell</option>
-                            <option value="rent" <?= (($_GET['purpose'] ?? '')=='rent')?'selected':'' ?>>Rent</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="filter-input-group">
-                        <input type="number" name="min_price" class="form-control border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;" placeholder="Min ₹">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="filter-input-group">
-                        <input type="number" name="max_price" class="form-control border-0 bg-transparent" style="height: 48px; font-size: 0.9rem; color: #1e293b; padding-left: 16px;" placeholder="Max ₹">
-                    </div>
-                </div>
+
                 <div class="col-md-1">
-                    <button class="btn btn-success w-100 d-flex align-items-center justify-content-center" style="background: #2eca6a; border: none; height: 48px; border-radius: 12px; transition: background 0.2s;">
-                        <i class="fa-solid fa-magnifying-glass fs-5"></i>
+
+                    <button class="btn btn-success w-100"
+                            style="height:48px;background:#2eca6a;border:none;border-radius:12px;">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
                     </button>
+
                 </div>
+
             </form>
+
         </div>
 
     </div>
