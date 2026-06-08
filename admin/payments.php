@@ -195,7 +195,7 @@ $payments = $stmt->fetchAll();
                                     <span class="text-muted fw-bold">#<?= $p['id'] ?></span>
                                 </td>
                                 <td>
-                                    <div class="fw-700 text-dark"><?= htmlspecialchars($p['phone']) ?></div>
+                                    <div class="fw-700 text-dark"><?= htmlspecialchars($payment['phone'] ?? '-') ?></div>
                                     <small class="text-muted">UID: <?= $p['user_id'] ?></small>
                                 </td>
                                 <td>
