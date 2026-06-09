@@ -403,14 +403,17 @@ function startRegistrationPayment() {
     btn.disabled = true;
     btn.innerHTML = "Processing...";
 
-    // Basic frontend validation
     const phone = document.querySelector('[name=phone]').value.trim();
     const password = document.querySelector('[name=password]').value.trim();
     const business = document.querySelector('[name=business_name]').value.trim();
     const state = document.querySelector('[name=state]').value.trim();
     const district = document.querySelector('[name=district]').value.trim();
+    const email = document.querySelector('[name=email]').value.trim();
+    const rera = document.querySelector('[name=rera]').value.trim();
+    const gst = document.querySelector('[name=gst]').value.trim();
 
     if (!phone || !password || !business || !state || !district) {
+
         alert("Please fill all required fields");
 
         btn.disabled = false;
@@ -418,15 +421,55 @@ function startRegistrationPayment() {
         return;
     }
 
-    fetch('../user/create_order.php', {
+    const formData = new URLSearchParams({
+        phone,
+        email,
+        password,
+        business_name: business,
+        state,
+        district,
+        rera,
+        gst
+    });
+
+    fetch('pre_register.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'amount=120&type=registration'
+        body: formData
     })
     .then(res => res.json())
+    .then(userData => {
+
+        if (!userData.success) {
+
+            alert(userData.message);
+
+            btn.disabled = false;
+            btn.innerHTML = "Pay ₹120 & Create Account";
+            return;
+        }
+
+        return fetch('../user/create_order.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'amount=120&type=registration'
+        });
+
+    })
+    .then(res => {
+
+        if (!res) return;
+
+        return res.json();
+
+    })
     .then(data => {
+
+        if (!data) return;
 
         if (!data.order_id) {
 
@@ -451,26 +494,21 @@ function startRegistrationPayment() {
                 "name": business
             },
 
-            "handler": function (response) {
+            "handler": function(response) {
 
                 fetch('../user/verify_payment.php', {
-
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-
                     body: JSON.stringify(response)
-
                 })
                 .then(res => res.text())
                 .then(res => {
 
                     if (res.trim() === "success") {
 
-                        document.getElementById('payment_verified').value = "1";
-
-                        document.getElementById('registerForm').submit();
+                        window.location.href = "../user/dashboard.php";
 
                     } else {
 
@@ -480,7 +518,6 @@ function startRegistrationPayment() {
                         btn.innerHTML = "Pay ₹120 & Create Account";
                     }
                 });
-
             },
 
             "theme": {
@@ -490,7 +527,7 @@ function startRegistrationPayment() {
 
         var rzp = new Razorpay(options);
 
-        rzp.on('payment.failed', function () {
+        rzp.on('payment.failed', function() {
 
             alert("Payment failed");
 
@@ -501,7 +538,9 @@ function startRegistrationPayment() {
         rzp.open();
 
     })
-    .catch(() => {
+    .catch(error => {
+
+        console.error(error);
 
         alert("Something went wrong");
 
