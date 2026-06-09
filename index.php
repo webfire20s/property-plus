@@ -7,27 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 🔥 FILTER LOGIC (UNTOUCHED)
-// $where = ["status IN ('active','approved')"];
-// $params = [];
 
-// if (!empty($_GET['search'])) {
-
-//     $where[] = "(
-//         business_name LIKE ?
-//         OR district LIKE ?
-//         OR state LIKE ?
-//         OR phone LIKE ?
-//         OR rera_number LIKE ?
-//     )";
-
-//     $search = "%" . trim($_GET['search']) . "%";
-
-//     $params[] = $search;
-//     $params[] = $search;
-//     $params[] = $search;
-//     $params[] = $search;
-//     $params[] = $search;
-// }
 // ================= USERS FETCH =================
 // PAGINATION
 $limit = 12;
@@ -48,15 +28,17 @@ if (!empty($_GET['search'])) {
         OR u.state LIKE ?
         OR u.phone LIKE ?
         OR u.rera_number LIKE ?
+        OR u.gst_number LIKE ?
     )";
 
     $search = "%" . trim($_GET['search']) . "%";
 
-    $userParams[] = $search;
-    $userParams[] = $search;
-    $userParams[] = $search;
-    $userParams[] = $search;
-    $userParams[] = $search;
+    $userParams[] = $search; // business_name
+    $userParams[] = $search; // district/address
+    $userParams[] = $search; // state
+    $userParams[] = $search; // phone
+    $userParams[] = $search; // rera
+    $userParams[] = $search; // gst
 }
 
 // MAIN USERS QUERY

@@ -119,7 +119,15 @@ $plan = $stmt->fetchColumn();
 
     // ✅ Fetch all user details (Logic strictly preserved)
     $stmt = $pdo->query("
-        SELECT id, phone, business_name, state, district, rera_number, gst_number
+        SELECT
+            id,
+            phone,
+            email,
+            business_name,
+            state,
+            district,
+            rera_number,
+            gst_number
         FROM users
         WHERE status='active'
         ORDER BY id DESC
@@ -151,6 +159,15 @@ $plan = $stmt->fetchColumn();
                     <div class="detail-item">
                         <strong><i class="bi bi-telephone-fill me-2 text-muted small"></i>Phone:</strong> 
                         <span class="ms-1"><?= htmlspecialchars($u['phone']) ?></span>
+                    </div>
+
+                    <div class="detail-item">
+                        <strong>
+                            <i class="bi bi-envelope-fill me-2 text-muted small"></i>Email:
+                        </strong>
+                        <span class="ms-1">
+                            <?= !empty($u['email']) ? htmlspecialchars($u['email']) : '<span class="text-muted">N/A</span>' ?>
+                        </span>
                     </div>
 
                     <div class="detail-item">

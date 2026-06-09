@@ -34,12 +34,12 @@ $base_url = $_ENV['BASE_URL'] ?? '/';
     .header .logo img { max-height: 40px; margin-right: 10px; }
     .navmenu .btn-get-started {
         background: var(--accent-color, #2eca6a);
-        padding: 8px 20px;
-        margin-left: 15px;
-        border-radius: 4px;
+        padding: 8px 6px;
+        margin-left: 12px;
+        border-radius: 3px;
         color: #fff !important;
     }
-    .logout-icon { color: #ef4444 !important; font-size: 1.2rem; }
+    .logout-icon { color: #ef4444 !important; font-size: 0.5rem; }
 
     /* ==========================================================================
        THE GLOBAL NAVBAR STACKING FIX
@@ -91,7 +91,7 @@ $base_url = $_ENV['BASE_URL'] ?? '/';
             <li><a href="<?php echo $base_url; ?>user/add_property.php" class="btn-get-started">Add Property</a></li>
             <li>
                 <a href="<?php echo $base_url; ?>auth/logout.php" class="logout-icon">
-                    <i class="bi bi-box-arrow-right"></i>
+                    <i class="bi bi-box-arrow-right"></i>Logout
                 </a>
             </li>
 
