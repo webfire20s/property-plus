@@ -122,6 +122,7 @@ function renderLinks($current) {
     $links = [
         'dashboard.php' => ['icon' => 'fa-chart-pie', 'label' => 'Overview'],
         'users.php' => ['icon' => 'fa-user-group', 'label' => 'User Management'],
+        'deleted_users.php' => ['icon' => 'fa-user-group', 'label' => 'Deleted Users'],
         'properties.php' => ['icon' => 'fa-city', 'label' => 'Property Listings'],
         'admin_hero.php' => ['icon' => 'fa-images', 'label' => 'Hero Slider'],
         'leads.php' => ['icon' => 'fa-comment-dots', 'label' => 'Inquiry Leads'],

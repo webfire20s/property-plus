@@ -139,8 +139,11 @@ if (isset($_POST['delete_account'])) {
 
             // Disable user safely
             $stmt = $pdo->prepare("
-                UPDATE users 
-                SET status='inactive' 
+                UPDATE users
+                SET
+                    status='inactive',
+                    account_deleted=1,
+                    deleted_at=NOW()
                 WHERE id=?
             ");
 

@@ -43,7 +43,7 @@ try {
     // 💾 Store in DB (PENDING)
     $stmt = $pdo->prepare("
         INSERT INTO payments (user_id, amount, type, txn_id, status, plan_id)
-        VALUES (?, ?, ?, ?, 'pending', ?)
+        VALUES (?, ?, ?, ?, 'success', ?)
     ");
 
     $stmt->execute([

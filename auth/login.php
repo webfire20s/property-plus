@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <label class="form-label">Phone Number</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="fa-solid fa-mobile-screen-button"></i></span>
-                <input name="phone" type="text" class="form-control" placeholder="9876543210" required>
+                <input name="phone" type="text" class="form-control" placeholder="" required>
             </div>
         </div>
 
