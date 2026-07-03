@@ -456,7 +456,7 @@ function startRegistrationPayment() {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: 'amount=1&type=registration'
+            body: 'amount=120&type=registration'
         });
 
     })
